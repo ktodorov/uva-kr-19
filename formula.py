@@ -1,5 +1,6 @@
 from enums.operation import Operation
 from literal import Literal
+import utils
 
 class Formula:
 
@@ -27,7 +28,7 @@ class Formula:
             if formula_string == '':
                 continue
 
-            if formula_string.isdigit():
+            if utils.is_digit(formula_string):
                 literal = Literal(formula_string)
                 self.elements.append(literal)
             else:
