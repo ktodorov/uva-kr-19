@@ -1,0 +1,2 @@
+class UnsatisfiableError(Exception):
+    pass
