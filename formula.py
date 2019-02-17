@@ -22,6 +22,16 @@ class Formula(BaseElement):
             new_formula.add_elements_from_string(current_line_formula)
             self.elements.append(new_formula)
 
+    def add_game(self, game):
+        for game_position in game:
+            new_formula = Formula(Operation.OR)
+            literal = Literal(game_position)
+            new_formula.add_element(literal)
+            self.elements.append(new_formula)
+
+    def add_element(self, element):
+        self.elements.append(element)
+
     def add_elements_from_string(self, text):
         # print(f'calling add_elements_from_string with {text}')
         formula_strings = text.split(" ")
