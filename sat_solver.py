@@ -1,5 +1,6 @@
 from formula import Formula
 from exceptions.unsatisfiable_error import UnsatisfiableError
+import copy
 
 class SatSolver:
     def __init__(self, formula: Formula):
@@ -29,12 +30,13 @@ class SatSolver:
             return False
             
         first_literal = literals[0]
-        values[first_literal] = True
-        if self.solve_using_values(literals[1:], values):
+        new_values = copy.deepcopy(values)
+        new_values[first_literal] = True
+        if self.solve_using_values(literals[1:], new_values):
             return True
         
-        values[first_literal] = False
-        if self.solve_using_values(literals[1:], values):
+        new_values[first_literal] = False
+        if self.solve_using_values(literals[1:], new_values):
             return True
 
         return False
