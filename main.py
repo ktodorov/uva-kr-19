@@ -10,13 +10,13 @@ for i, game in enumerate(decoder.games):
     print(i)
 
     formula = Formula(Operation.AND)
-    formula.add_elements_from_file("examples/sudoku-rules.txt")
     formula.add_game(game)
+    formula.add_elements_from_file("examples/sudoku-rules.txt")
     # formula.add_elements_from_file("examples/sudoku-example.txt")
     # print(formula)
 
-    sat_solver = SatSolver(formula)
-    solved = sat_solver.solve()
+    sat_solver = SatSolver(formula) 
+    solved = sat_solver.solve() # TODO: Get this number from the file
     print(solved)
 
     break # for now, stick to one game only

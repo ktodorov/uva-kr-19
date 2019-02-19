@@ -7,3 +7,8 @@ def is_digit(number):
         return True
     except ValueError:
         return False
+
+def contain_common_items(list1, list2):
+    union_list = set(list1) & set(list2)
+
+    return len(union_list) > 0

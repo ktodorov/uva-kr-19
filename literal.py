@@ -31,6 +31,23 @@ class Literal(BaseElement):
     def set_value(self, value):
         self.value = value
 
+    def apply_values(self, values):
+        self.value = values[self.number]
+
+    def get_unit_clauses(self):
+        result = []
+
+        if not self.has_value():
+            result.append(self)
+
+        return result
+
+    def get_pure_literals(self):
+        return [self]
+
+    def simplify(self):
+        pass
+
     def reset_value(self):
         self.value = None
 

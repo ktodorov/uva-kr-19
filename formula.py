@@ -39,7 +39,14 @@ class Formula(BaseElement):
     
     def add_elements(self, elements):
         for element in elements:
+            if "911_915" in element.get_literal_string():
+                a = 0
+
             self.elements.append(element)
+            
+    def remove_elements(self, elements):
+        for element in elements:
+            self.elements.remove(element)
 
     def get_elements_from_string(self, text):
         # print(f'calling get_elements_from_string with {text}')
@@ -68,19 +75,30 @@ class Formula(BaseElement):
         return elements
 
     def is_correct(self) -> bool:
-        result = False
         if self.operation == Operation.AND:
-            if any(element.has_value() and not element.is_correct() for element in self.elements):
-                raise UnsatisfiableError()
-
-            result = all(element.is_correct() for element in self.elements)
+            for element in self.elements:
+                if not element.is_correct():
+                    if element.has_value():
+                        return False
+                        # raise UnsatisfiableError
+                
+                    return False
+            
+            return True
         elif self.operation == Operation.OR:
-            if all(element.has_value() and not element.is_correct() for element in self.elements):
-                raise UnsatisfiableError()
+            all_unsatisfiable = True
 
-            result = any(element.is_correct() for element in self.elements)
+            for element in self.elements:
+                if element.is_correct():
+                    return True
+                elif not element.has_value():
+                    all_unsatisfiable = False
+                
+            if all_unsatisfiable:
+                return False
+                # raise UnsatisfiableError()
 
-        return result
+            return False
 
     def has_value(self) -> bool:
         result = all(element.has_value() for element in self.elements)
@@ -105,50 +123,73 @@ class Formula(BaseElement):
                 if inner_empty_clauses:
                     return True
 
-    def simplify(self):
-        # if self.operation == Operation.OR:
-        #     return
+    # def simplify(self):
+    #     current_level_elements = {}
+    #     elements_to_remove = []
 
-        current_level_elements = {}
+    #     # iterate over formula's elements
+    #     # if we have the same element but opposite signs -> 
+    #     # if we have OR: remove this element from current formula
+    #     # if we have AND: formula is unsatisfiable
+        
+    #     for element in self.elements:
+    #         if type(element) is Formula:
+    #             element.simplify()
+            
+    #         element_string = element.get_literal_string()
+    #         if element_string in elements_to_remove:
+    #             continue
+
+    #         if element_string in current_level_elements.keys():
+    #             for current_level_element in current_level_elements[element_string]:
+    #                 if current_level_element.get_sign() != element.get_sign():
+    #                     if self.operation == Operation.AND:
+    #                         raise UnsatisfiableError()
+
+    #                     elements_to_remove.append(element_string)
+    #                     break
+            
+    #         else:
+    #             current_level_elements[element_string] = [element]
+
+    #     # remove all duplicated or empty elements 
+    #     self.elements = [
+    #         element 
+    #             for element 
+    #             in self.elements 
+    #         if element.get_literal_string() not in elements_to_remove 
+    #             and not element.is_empty()]
+
+    def simplify(self):
         elements_to_remove = []
 
-        # iterate over formula's elements
-        # if we have the same element but opposite signs -> 
-        # if we have OR: remove this element from current formula
-        # if we have AND: formula is unsatisfiable
-        
-        for element in self.elements:
-            if type(element) is Formula:
-                element.simplify()
-            
-            element_string = element.get_literal_string()
-            if element_string in elements_to_remove:
-                continue
+        if self.operation == Operation.OR:
+            for element in self.elements:
+                # if not element.is_correct() and element.has_value():
+                #     elements_to_remove.append(element)
 
-            if element_string in current_level_elements.keys():
-                for current_level_element in current_level_elements[element_string]:
-                    if current_level_element.get_sign() != element.get_sign():
-                        if self.operation == Operation.AND:
-                            raise UnsatisfiableError()
+                # element.simplify()
+                pass
 
-                        elements_to_remove.append(element_string)
-                        break
-            
-            else:
-                current_level_elements[element_string] = [element]
+        elif self.operation == Operation.AND:
+            for element in self.elements:
+                if type(element) is Formula and element.is_correct():
+                    if "911_915" in element.get_literal_string():
+                        a = 0
 
-        # remove all duplicated or empty elements 
-        self.elements = [
-            element 
-                for element 
-                in self.elements 
-            if element.get_literal_string() not in elements_to_remove 
-                and not element.is_empty()]
-            
+                    elements_to_remove.append(element)
+                # else:
+                #     element.simplify()
+
+        return elements_to_remove
+        # for element in elements_to_remove:
+            # print(f'removing {element.get_literal_string()} ...')
+            # self.elements.remove(element)y
+
     def get_literal_string(self) -> str:
         result_string = ""
         for element in self.elements:
-            result_string += element.get_literal_string()
+            result_string += element.get_literal_string() + "_"
         
         return result_string
 
@@ -165,7 +206,7 @@ class Formula(BaseElement):
 
         for element in self.elements:
             if type(element) is Literal:
-                element_string = element.get_literal_string()
+                element_string = element.get_number()
                 result[element_string] = result.get(element_string, 0) + 1
             elif type(element) is Formula:
                 formula_literals = element.get_all_literals()
@@ -175,143 +216,57 @@ class Formula(BaseElement):
 
         return result
 
-    def get_single_literals(self) -> list:
-        # if not all(type(element) is Literal for element in self.elements):
+    def get_unit_clauses(self) -> list:
+        result = []
+
         if self.operation == Operation.AND:
-            result = []
             for element in self.elements:
-            # empty_literals = list(filter(lambda element: 
-            #     # type(element) is Literal and 
-            #     not element.has_value(), self.elements))
-            # if len(empty_literals) > 1:
-            #     return []
-            
-            # return empty_literals
-
-                if type(element) is Formula:
-                    inner_single_literals = element.get_single_literals()
-                    if len(inner_single_literals) > 1:
-                        continue
-                    
-                    # if element.operation == Operation.OR:
-                    #     if len(inner_single_literals)
-                    result.extend(inner_single_literals)
-                elif type(element) is Literal:
-                    if not element.has_value():
-                        result.append(element)
-            
-            return result
-        elif self.operation == Operation.OR:
-            if any(element.is_correct() for element in self.elements):
-                return []
-            else:
-                empty_literals = list(filter(lambda element: 
-                    # type(element) is Literal and 
-                    not element.has_value(), self.elements))
-                if len(empty_literals) > 1:
-                    return []
-
-                return empty_literals
-        # else:
-        #     unfilled_literals = [element for element in self.elements if not element.has_value()]
-        #     if len(unfilled_literals) > 1:
-        #         return []
-            
-        #     if self.operation == Operation.AND:
-        #         result = []
-        #         for element in self.elements:
-        #             result.append(element)
+                inner_unit_clauses = element.get_unit_clauses()
+                if len(inner_unit_clauses) > 1:
+                    continue
                 
-        #         return result
-        #     elif self.operation == Operation.OR:
-        #         if any(element.is_correct() for element in self.elements):
-        #             return []
-        #         else:
-        #             empty_literals = list(filter(lambda element: 
-        #                 # type(element) is Literal and 
-        #                 not element.has_value(), self.elements))
+                result.extend(inner_unit_clauses)
 
-        #             return empty_literals
+        elif self.operation == Operation.OR:
+            for element in self.elements:
+                if element.is_correct():
+                    return []
+                
+                if not element.has_value():
+                    result.append(element)
 
+            if len(result) > 1:
+                return []
+
+        return result
+
+    def get_pure_literals(self):
+        result = {}
+        unpure_literals = []
+
+        for element in self.elements:
+            if element.has_value():
+                continue
+            
+            inner_pure_literals = element.get_pure_literals()
+            for pure_literal in inner_pure_literals:
+                pure_literal_number = pure_literal.get_number()
+
+                if pure_literal_number in unpure_literals:
+                    continue
+
+                if pure_literal_number not in result.keys():
+                    result[pure_literal_number] = pure_literal
+                elif result[pure_literal_number].get_sign() != pure_literal.get_sign():
+                    del result[pure_literal_number]
+                    unpure_literals.append(pure_literal_number)
+
+        return result.values()
 
     def apply_values(self, values):
         for element in self.elements:
-            if type(element) is Formula:
-                element.apply_values(values)
-            elif type(element) is Literal:
-                element_string = element.get_literal_string()
-                if element_string in values.keys():
-                    element.set_value(values[element_string])
-                else:
-                    element.reset_value()
+            element.apply_values(values)
 
-    def try_solve(self, values) -> bool:
-        # first check if it is now solved
-        # if not, check if there are left any single literals
-        # if there are, get them all and check if there are duplicates with different signs
-        #   if there are - no solution
-        #   if there are not - set all to true
-        # repeat until solution or no solution
-
-        self.apply_values(values)
-
-        if self.is_correct():
-            # print all true values in DIMACS format
-            for key in sorted(values):
-                if values[key]:
-                    print (f'{key} 0')
-
-            return True
-        
-        single_literals = self.get_single_literals()
-        if not single_literals:
-            # return False
-            all_literals = self.get_all_literals()
-            all_set_literals = values.keys()
-            all_non_set_literals = list(set(all_literals) - set(all_set_literals))
-            if len(all_non_set_literals) == 0:
-                return False
-
-            first_non_set_literal = all_non_set_literals[0]
-            new_values = copy.deepcopy(values)
-            new_values[first_non_set_literal] = True
-            try:
-                if self.try_solve(new_values):
-                    return True
-            except UnsatisfiableError:
-                pass
-
-            new_values[first_non_set_literal] = False
-            try:
-                if self.try_solve(new_values):
-                    return True
-            except UnsatisfiableError:
-                pass
-
-            return False
-        
-        # Literals.Any(l => Literals.Any(l2 => l2.number == l1.number && l2.negation != l1.negation))
-        if (any(
-            any(
-                l2.get_number() == l1.get_number() and 
-                l2.get_sign() != l1.get_sign() 
-                for l2 
-                in single_literals)
-            for l1 
-            in single_literals)):
-            raise UnsatisfiableError()
-            # return False
-
-        new_values = copy.deepcopy(values)
-        for single_literal in single_literals:
-            value_to_set = True
-            if not single_literal.get_sign():
-                value_to_set = False
-
-            new_values[single_literal.get_literal_string()] = value_to_set
-
-        return self.try_solve(new_values)
-    
     def get_number(self) -> int:
         if not self.elements:
             raise Exception("Invalid operation. Attempted to get number from formula with no elements.")
