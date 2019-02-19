@@ -16,7 +16,7 @@ for i, game in enumerate(decoder.games):
     # print(formula)
 
     sat_solver = SatSolver(formula) 
-    solved = sat_solver.solve() # TODO: Get this number from the file
+    solved = sat_solver.solve()
     print(solved)
 
     break # for now, stick to one game only

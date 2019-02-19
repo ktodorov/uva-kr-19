@@ -14,7 +14,7 @@ class SudokuDecoder:
         for line in file:
             current_game = []
             for char_position, char in enumerate(line):
-                if char == '.':
+                if not char.isdigit():
                     continue
                 
                 row_position = math.floor(char_position / self.game_size) + 1

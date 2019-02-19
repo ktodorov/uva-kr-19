@@ -51,6 +51,9 @@ class Literal(BaseElement):
     def reset_value(self):
         self.value = None
 
+    def reset_elements(self):
+        pass
+
     def __str__(self):
         result = ""
         if self.negation:

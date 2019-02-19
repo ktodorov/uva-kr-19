@@ -10,6 +10,7 @@ class Formula(BaseElement):
     def __init__(self, operation):
         self.elements = []
         self.operation = operation
+        self.removed_elements = []
         
     def add_elements_from_file(self, file_name):
         file = open(file_name, "r")
@@ -39,9 +40,6 @@ class Formula(BaseElement):
     
     def add_elements(self, elements):
         for element in elements:
-            if "911_915" in element.get_literal_string():
-                a = 0
-
             self.elements.append(element)
             
     def remove_elements(self, elements):
@@ -49,7 +47,6 @@ class Formula(BaseElement):
             self.elements.remove(element)
 
     def get_elements_from_string(self, text):
-        # print(f'calling get_elements_from_string with {text}')
         formula_strings = text.split(" ")
         elements = []
 
@@ -75,6 +72,9 @@ class Formula(BaseElement):
         return elements
 
     def is_correct(self) -> bool:
+        if len(self.elements) == 0:
+            return False
+
         if self.operation == Operation.AND:
             for element in self.elements:
                 if not element.is_correct():
@@ -96,7 +96,6 @@ class Formula(BaseElement):
                 
             if all_unsatisfiable:
                 return False
-                # raise UnsatisfiableError()
 
             return False
 
@@ -123,68 +122,39 @@ class Formula(BaseElement):
                 if inner_empty_clauses:
                     return True
 
-    # def simplify(self):
-    #     current_level_elements = {}
-    #     elements_to_remove = []
-
-    #     # iterate over formula's elements
-    #     # if we have the same element but opposite signs -> 
-    #     # if we have OR: remove this element from current formula
-    #     # if we have AND: formula is unsatisfiable
-        
-    #     for element in self.elements:
-    #         if type(element) is Formula:
-    #             element.simplify()
-            
-    #         element_string = element.get_literal_string()
-    #         if element_string in elements_to_remove:
-    #             continue
-
-    #         if element_string in current_level_elements.keys():
-    #             for current_level_element in current_level_elements[element_string]:
-    #                 if current_level_element.get_sign() != element.get_sign():
-    #                     if self.operation == Operation.AND:
-    #                         raise UnsatisfiableError()
-
-    #                     elements_to_remove.append(element_string)
-    #                     break
-            
-    #         else:
-    #             current_level_elements[element_string] = [element]
-
-    #     # remove all duplicated or empty elements 
-    #     self.elements = [
-    #         element 
-    #             for element 
-    #             in self.elements 
-    #         if element.get_literal_string() not in elements_to_remove 
-    #             and not element.is_empty()]
-
     def simplify(self):
         elements_to_remove = []
 
         if self.operation == Operation.OR:
             for element in self.elements:
-                # if not element.is_correct() and element.has_value():
-                #     elements_to_remove.append(element)
+                if not element.is_correct() and element.has_value():
+                    elements_to_remove.append(element)
 
                 # element.simplify()
-                pass
+            # pass
 
         elif self.operation == Operation.AND:
             for element in self.elements:
-                if type(element) is Formula and element.is_correct():
-                    if "911_915" in element.get_literal_string():
-                        a = 0
-
+                if element.is_correct():
                     elements_to_remove.append(element)
-                # else:
-                #     element.simplify()
 
-        return elements_to_remove
-        # for element in elements_to_remove:
-            # print(f'removing {element.get_literal_string()} ...')
-            # self.elements.remove(element)y
+                element.simplify()
+
+        # return elements_to_remove
+        self.removed_elements.extend(elements_to_remove)
+
+        for element in elements_to_remove:
+            if element in self.elements:
+                self.elements.remove(element)
+
+    def reset_elements(self):
+        for element in self.removed_elements:
+            self.add_element(element)
+        
+        for element in self.elements:
+            element.reset_elements()
+
+        self.removed_elements = []
 
     def get_literal_string(self) -> str:
         result_string = ""
