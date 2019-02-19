@@ -12,6 +12,7 @@ class SatSolver:
         self.timer2 = 0
         self.timer3 = 0
         self.timer4 = 0
+        self.timer5 = 0
 
     def solve(self) -> bool:
         if self.formula.is_empty():
@@ -21,10 +22,11 @@ class SatSolver:
 
         result = self.solve_using_values(current_values)
 
-        print(f'timer1 - {self.timer1}')
-        print(f'timer2 - {self.timer2}')
-        print(f'timer3 - {self.timer3}')
-        print(f'timer4 - {self.timer4}')
+        # print(f'timer1 - {self.timer1}')
+        # print(f'timer2 - {self.timer2}')
+        # print(f'timer3 - {self.timer3}')
+        # print(f'timer4 - {self.timer4}')
+        # print(f'timer5 - {self.timer5}')
 
         return result
 
@@ -45,14 +47,17 @@ class SatSolver:
         self.timer2 += (end - start)
         
         # simplify the formula
+        start = time.time()
         self.formula.simplify()
+        end = time.time()
+        self.timer3 += (end - start)
 
         # take all unit clauses - those that can be only one value
         # and assign them a value
         start = time.time()
         unit_clauses = self.formula.get_unit_clauses()
         end = time.time()
-        self.timer3 += (end - start)
+        self.timer4 += (end - start)
 
         if unit_clauses:
             start = time.time()
@@ -71,7 +76,7 @@ class SatSolver:
                 return False
 
             end = time.time()
-            self.timer4 += (end - start)
+            self.timer5 += (end - start)
 
             new_values = copy.deepcopy(values)
             for single_literal in unit_clauses:
@@ -155,7 +160,7 @@ class SatSolver:
         for key in sorted(values):
             if values[key]:
                 end_result.append(key)
-                print (f'{key} 0')
+                # print (f'{key} 0')
         
         # assert that our result is OK
         self.validate_end_result(end_result)
