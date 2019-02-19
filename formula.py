@@ -144,8 +144,7 @@ class Formula(BaseElement):
         self.removed_elements.extend(elements_to_remove)
 
         for element in elements_to_remove:
-            if element in self.elements:
-                self.elements.remove(element)
+            self.elements.remove(element)
 
     def reset_elements(self):
         for element in self.removed_elements:
