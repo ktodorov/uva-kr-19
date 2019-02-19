@@ -4,8 +4,8 @@ from sudoku_decoder import SudokuDecoder
 from enums.operation import Operation
 import time
 
-# decoder = SudokuDecoder("examples/test-sudokus/1000 sudokus.txt")
-decoder = SudokuDecoder("examples/test-sudokus/damnhard.sdk.txt")
+decoder = SudokuDecoder("examples/test-sudokus/1000 sudokus.txt")
+# decoder = SudokuDecoder("examples/test-sudokus/damnhard.sdk.txt")
 
 start = time.time()
 total_games = len(decoder.games)
@@ -29,6 +29,6 @@ for game in decoder.games:
     i += 1
 
 end = time.time()
-total = (start - end)
+total = (end - start)
 
 print(f'total time - {total}')

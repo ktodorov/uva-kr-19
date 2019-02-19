@@ -32,57 +32,41 @@ class SatSolver:
 
     def solve_using_values(self, values):
         # apply current values to the literals
-        start = time.time()
-        self.formula.apply_values(values)
-        end = time.time()
-        self.timer1 += (end - start)
+        _, timer = utils.measure_function(lambda: self.formula.apply_values(values))
+        self.timer1 += timer
 
         # if the formula is correct, we stop here
-        start = time.time()
-        if self.formula.is_correct():
+        # start = time.time()
+        is_correct, timer = utils.measure_function(lambda: self.formula.is_correct())
+        self.timer2 += timer
+        if is_correct:
             self.print_end_result(values)
             return True
 
-        end = time.time()
-        self.timer2 += (end - start)
+        # end = time.time()
+        # self.timer2 += (end - start)
         
         # simplify the formula
-        start = time.time()
-        self.formula.simplify()
-        end = time.time()
-        self.timer3 += (end - start)
+        _, timer = utils.measure_function(lambda: self.formula.simplify())
+        self.timer3 += timer
 
         # take all unit clauses - those that can be only one value
         # and assign them a value
-        start = time.time()
-        unit_clauses = self.formula.get_unit_clauses()
-        end = time.time()
-        self.timer4 += (end - start)
+        unit_clauses, timer = utils.measure_function(lambda: self.formula.get_unit_clauses())
+        self.timer4 += timer
 
         if unit_clauses:
-            start = time.time()
-            
             # if we have any unit clauses that are the same literal but require
             # opposite values, we abort the current iteration as it is invalid
-            if (any(
-                any(
-                    l2.get_number() == l1.get_number() and 
-                    l2.get_sign() != l1.get_sign() 
-                    for l2 
-                    in unit_clauses)
-                for l1 
-                in unit_clauses)):
+            valid_unit_clauses, timer = utils.measure_function(lambda: self.validate_unit_clauses(unit_clauses))
+            if not valid_unit_clauses:
                 self.formula.reset_elements()
                 return False
 
-            end = time.time()
-            self.timer5 += (end - start)
+            self.timer5 += timer
 
-            new_values = copy.deepcopy(values)
-            for single_literal in unit_clauses:
-                literal_string = single_literal.get_number()
-                new_values[literal_string] = single_literal.get_sign()
-                
+            new_values = self.create_new_values(values, unit_clauses)
+
             # try to solve with the new values
             # if we fail, we must not forget to reset the elements 
             # which were changed during the current iteration
@@ -96,17 +80,43 @@ class SatSolver:
         # then try to solve with the new values
         pure_literals = self.formula.get_pure_literals()
         if pure_literals:
-            new_values = copy.deepcopy(values)
-            
-            for pure_literal in pure_literals:
-                new_values[pure_literal.get_number()] = pure_literal.get_sign() 
-
+            new_values = self.create_new_values(values, pure_literals)
             result = self.solve_using_values(new_values)
             if not result:
                 self.formula.reset_elements()
             
             return result
 
+        return self.split_formula(values)
+
+    def get_first_available_literal(self, values):
+        for key, value in values.items():
+            if value == None:
+                return key
+
+    def validate_end_result(self, truth_clauses):
+        for i in range(1, 10):
+            for j in range(1, 10):
+                self.validate_end_result_clause(truth_clauses, i, j)
+
+    def validate_unit_clauses(self, unit_clauses):
+        for unit_clause1 in unit_clauses:
+            for unit_clause2 in unit_clauses:
+                if (unit_clause1.get_number() == unit_clause2.get_number() and
+                    unit_clause1.get_sign() != unit_clause2.get_sign()):
+                    return False
+
+        return True
+
+    def create_new_values(self, values, literals):
+        new_values = copy.deepcopy(values)
+        for single_literal in literals:
+            literal_string = single_literal.get_number()
+            new_values[literal_string] = single_literal.get_sign()
+
+        return new_values
+            
+    def split_formula(self, values):
         # if we have no remaining literals, then we have solved the task
         first_non_set_literal = self.get_first_available_literal(values)
         if not first_non_set_literal:
@@ -135,16 +145,6 @@ class SatSolver:
         self.formula.reset_elements()
         return False
 
-    def get_first_available_literal(self, values):
-        for key, value in values.items():
-            if value == None:
-                return key
-
-    def validate_end_result(self, truth_clauses):
-        for i in range(1, 10):
-            for j in range(1, 10):
-                self.validate_end_result_clause(truth_clauses, i, j)
-                
     def validate_end_result_clause(self, all_clauses, position_x, position_y):
         matches = 0
         for clause in all_clauses:
