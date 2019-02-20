@@ -1,5 +1,10 @@
 import time
 
+timer1 = 0
+timer2 = 0
+timer3 = 0
+timer4 = 0
+
 def is_digit(number):
     if number.isdigit():
         return True

@@ -28,31 +28,32 @@ class SatSolver:
         # print(f'timer4 - {self.timer4}')
         # print(f'timer5 - {self.timer5}')
 
+        # print(f'utils.timer1 - {utils.timer1}')
+        # print(f'utils.timer2 - {utils.timer2}')
+        # print(f'utils.timer3 - {utils.timer3}')
+        # print(f'utils.timer4 - {utils.timer4}')
+
         return result
 
-    def solve_using_values(self, values):
+    def solve_using_values(self, values): #################
         # apply current values to the literals
         _, timer = utils.measure_function(lambda: self.formula.apply_values(values))
         self.timer1 += timer
 
-        # if the formula is correct, we stop here
-        # start = time.time()
-        is_correct, timer = utils.measure_function(lambda: self.formula.is_correct())
+        # if the formula is already correct, we stop here
+        is_correct, timer = utils.measure_function(self.formula.is_correct)
         self.timer2 += timer
         if is_correct:
             self.print_end_result(values)
             return True
-
-        # end = time.time()
-        # self.timer2 += (end - start)
         
         # simplify the formula
-        _, timer = utils.measure_function(lambda: self.formula.simplify())
+        _, timer = utils.measure_function(self.formula.simplify)
         self.timer3 += timer
 
         # take all unit clauses - those that can be only one value
         # and assign them a value
-        unit_clauses, timer = utils.measure_function(lambda: self.formula.get_unit_clauses())
+        unit_clauses, timer = utils.measure_function(self.formula.get_unit_clauses)
         self.timer4 += timer
 
         if unit_clauses:
@@ -89,6 +90,14 @@ class SatSolver:
 
         return self.split_formula(values)
 
+    def get_most_occurred_literal(self):
+        all_literals = self.formula.get_all_literals(True)
+        most_occurred_literals = all_literals.most_common(1)
+        if most_occurred_literals:
+            return most_occurred_literals[0][0]
+        
+        return None
+
     def get_first_available_literal(self, values):
         for key, value in values.items():
             if value == None:
@@ -119,6 +128,7 @@ class SatSolver:
     def split_formula(self, values):
         # if we have no remaining literals, then we have solved the task
         first_non_set_literal = self.get_first_available_literal(values)
+        # first_non_set_literal = self.get_most_occurred_literal()
         if not first_non_set_literal:
             if self.formula.is_correct():
                 self.print_end_result(values)

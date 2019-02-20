@@ -12,6 +12,8 @@ total_games = len(decoder.games)
 number_of_solved = 0
 i = 1
 
+# decoder.games = decoder.games[2:]
+
 for game in decoder.games:
     formula = Formula(Operation.AND)
     formula.add_game(game)
@@ -21,11 +23,12 @@ for game in decoder.games:
     solved = sat_solver.solve()
     if solved:
         number_of_solved += 1
+    # break
 
     currently_passed_time = time.time() - start
     avg_time = currently_passed_time / (i)
     time_left = ((total_games - i) * avg_time) / 60
-    print (f'\r{i}/{total_games} - solved: {number_of_solved}/{i} - approximately left: {time_left} minutes     ', end='')
+    print (f'\r{i}/{total_games} || solved: {number_of_solved}/{i} || avg.time: {avg_time} || approximately left: {time_left} minutes     ', end='')
     i += 1
 
 end = time.time()

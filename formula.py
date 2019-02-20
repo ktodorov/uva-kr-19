@@ -4,6 +4,7 @@ import utils
 from base_element import BaseElement
 from exceptions.unsatisfiable_error import UnsatisfiableError
 import copy
+from collections import Counter
 
 class Formula(BaseElement):
 
@@ -11,6 +12,11 @@ class Formula(BaseElement):
         self.elements = []
         self.operation = operation
         self.removed_elements = []
+
+        utils.timer1 = 0
+        utils.timer2 = 0
+        utils.timer3 = 0
+        utils.timer4 = 0
         
     def add_elements_from_file(self, file_name):
         file = open(file_name, "r")
@@ -127,24 +133,40 @@ class Formula(BaseElement):
 
         if self.operation == Operation.OR:
             for element in self.elements:
-                if not element.is_correct() and element.has_value():
+                check, timer = utils.measure_function(lambda: element.has_value() and not element.is_correct())
+                utils.timer1 += timer
+                if check:
                     elements_to_remove.append(element)
-
-                # element.simplify()
+                else:
+                    element.simplify()
             # pass
 
         elif self.operation == Operation.AND:
             for element in self.elements:
-                if element.is_correct():
+                check, timer = utils.measure_function(element.is_correct)
+                utils.timer2 += timer
+                if check:
                     elements_to_remove.append(element)
+                else:
+                    element.simplify()
 
-                element.simplify()
+        _, timer = utils.measure_function(lambda: self.removed_elements.extend(elements_to_remove))
+        utils.timer3 += timer
 
-        # return elements_to_remove
-        self.removed_elements.extend(elements_to_remove)
+        _, timer = utils.measure_function(lambda: self.remove_elements(elements_to_remove))
+        utils.timer4 += timer
 
-        for element in elements_to_remove:
-            self.elements.remove(element)
+    def should_remove_element(self, element):
+        if self.operation == Operation.OR:
+            if not element.is_correct() and element.has_value():
+                return True
+        elif self.operation == Operation.AND:
+            if element.is_correct():
+                return True
+
+            element.simplify()
+
+        return False
 
     def reset_elements(self):
         for element in self.removed_elements:
@@ -170,18 +192,21 @@ class Formula(BaseElement):
 
         return result
 
-    def get_all_literals(self) -> dict:
-        result = dict()
+    def get_all_literals(self, only_unpopulated = False) -> dict:
+        result = Counter()
 
         for element in self.elements:
             if type(element) is Literal:
+                if only_unpopulated and element.has_value():
+                    continue
+                    
                 element_string = element.get_number()
-                result[element_string] = result.get(element_string, 0) + 1
+                result[element_string] = result[element_string] + 1
             elif type(element) is Formula:
-                formula_literals = element.get_all_literals()
+                formula_literals = element.get_all_literals(only_unpopulated)
                 # add all elements from inner formula to current one
                 for key, value in formula_literals.items():
-                    result[key] = result.get(key, 0) + value
+                    result[key] = result[key] + value
 
         return result
 
