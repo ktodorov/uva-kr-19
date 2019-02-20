@@ -3,16 +3,17 @@ from sat_solver import SatSolver
 from sudoku_decoder import SudokuDecoder
 from enums.operation import Operation
 import time
+import constants
 
 decoder = SudokuDecoder("examples/test-sudokus/1000 sudokus.txt")
 # decoder = SudokuDecoder("examples/test-sudokus/damnhard.sdk.txt")
 
-start = time.time()
 total_games = len(decoder.games)
 number_of_solved = 0
 i = 1
 
 # decoder.games = decoder.games[2:]
+currently_passed_time = 0
 
 for game in decoder.games:
     formula = Formula(Operation.AND)
@@ -25,13 +26,11 @@ for game in decoder.games:
         number_of_solved += 1
     # break
 
-    currently_passed_time = time.time() - start
-    avg_time = currently_passed_time / (i)
+    currently_passed_time += sat_solver.metrics[constants.GAMETIME_KEY]
+
+    avg_time = currently_passed_time / i
     time_left = ((total_games - i) * avg_time) / 60
     print (f'\r{i}/{total_games} || solved: {number_of_solved}/{i} || avg.time: {avg_time} || approximately left: {time_left} minutes     ', end='')
     i += 1
 
-end = time.time()
-total = (end - start)
-
-print(f'total time - {total}')
+print(f'total time - {currently_passed_time}')

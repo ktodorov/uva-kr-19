@@ -4,29 +4,24 @@ import utils
 import copy
 import time
 from collections import defaultdict
+import constants
 
 class SatSolver:
     def __init__(self, formula: Formula):
         self.formula = formula
-        self.timer1 = 0
-        self.timer2 = 0
-        self.timer3 = 0
-        self.timer4 = 0
-        self.timer5 = 0
+        self.metrics = {}
 
     def solve(self) -> bool:
         if self.formula.is_empty():
             return True
 
+        self.metrics = self.create_metrics_container()
+
         current_values = defaultdict(lambda: None)
+        result, game_time = utils.measure_function(lambda: self.solve_using_values(current_values))
+        self.metrics[constants.GAMETIME_KEY] = game_time
 
-        result = self.solve_using_values(current_values)
-
-        # print(f'timer1 - {self.timer1}')
-        # print(f'timer2 - {self.timer2}')
-        # print(f'timer3 - {self.timer3}')
-        # print(f'timer4 - {self.timer4}')
-        # print(f'timer5 - {self.timer5}')
+        # self.print_metrics()
 
         # print(f'utils.timer1 - {utils.timer1}')
         # print(f'utils.timer2 - {utils.timer2}')
@@ -38,23 +33,23 @@ class SatSolver:
     def solve_using_values(self, values): #################
         # apply current values to the literals
         _, timer = utils.measure_function(lambda: self.formula.apply_values(values))
-        self.timer1 += timer
+        self.metrics[constants.TIMER1_KEY] += timer
 
         # if the formula is already correct, we stop here
         is_correct, timer = utils.measure_function(self.formula.is_correct)
-        self.timer2 += timer
+        self.metrics[constants.TIMER2_KEY] += timer
         if is_correct:
             self.print_end_result(values)
             return True
         
         # simplify the formula
         _, timer = utils.measure_function(self.formula.simplify)
-        self.timer3 += timer
+        self.metrics[constants.TIMER3_KEY] += timer
 
         # take all unit clauses - those that can be only one value
         # and assign them a value
         unit_clauses, timer = utils.measure_function(self.formula.get_unit_clauses)
-        self.timer4 += timer
+        self.metrics[constants.TIMER4_KEY] += timer
 
         if unit_clauses:
             # if we have any unit clauses that are the same literal but require
@@ -62,9 +57,11 @@ class SatSolver:
             valid_unit_clauses, timer = utils.measure_function(lambda: self.validate_unit_clauses(unit_clauses))
             if not valid_unit_clauses:
                 self.formula.reset_elements()
+                self.metrics[constants.BACKTRACKS_KEY] += 1
                 return False
 
-            self.timer5 += timer
+            self.metrics[constants.TIMER5_KEY] += timer
+            self.metrics[constants.UNIT_CLAUSES_KEY] += len(unit_clauses)
 
             new_values = self.create_new_values(values, unit_clauses)
 
@@ -74,6 +71,7 @@ class SatSolver:
             result = self.solve_using_values(new_values)
             if not result:
                 self.formula.reset_elements()
+                self.metrics[constants.BACKTRACKS_KEY] += 1
             
             return result
 
@@ -81,10 +79,12 @@ class SatSolver:
         # then try to solve with the new values
         pure_literals = self.formula.get_pure_literals()
         if pure_literals:
+            self.metrics[constants.PURE_LITERALS_KEY] += len(pure_literals)
             new_values = self.create_new_values(values, pure_literals)
             result = self.solve_using_values(new_values)
             if not result:
                 self.formula.reset_elements()
+                self.metrics[constants.BACKTRACKS_KEY] += 1
             
             return result
 
@@ -126,6 +126,7 @@ class SatSolver:
         return new_values
             
     def split_formula(self, values):
+        self.metrics[constants.SPLITS_KEY] += 1
         # if we have no remaining literals, then we have solved the task
         first_non_set_literal = self.get_first_available_literal(values)
         # first_non_set_literal = self.get_most_occurred_literal()
@@ -135,6 +136,7 @@ class SatSolver:
                 return True
             else:
                 self.formula.reset_elements()
+                self.metrics[constants.BACKTRACKS_KEY] += 1
                 return False
 
         new_values = copy.deepcopy(values)
@@ -153,6 +155,7 @@ class SatSolver:
             return True
 
         self.formula.reset_elements()
+        self.metrics[constants.BACKTRACKS_KEY] += 1
         return False
 
     def validate_end_result_clause(self, all_clauses, position_x, position_y):
@@ -173,4 +176,39 @@ class SatSolver:
                 # print (f'{key} 0')
         
         # assert that our result is OK
-        self.validate_end_result(end_result)
+        # self.validate_end_result(end_result)
+
+    def create_metrics_container(self):
+        result = {
+            constants.SPLITS_KEY: 0,
+            constants.BACKTRACKS_KEY: 0,
+            constants.UNIT_CLAUSES_KEY: 0,
+            constants.PURE_LITERALS_KEY: 0,
+            constants.TIMER1_KEY: 0,
+            constants.TIMER2_KEY: 0,
+            constants.TIMER3_KEY: 0,
+            constants.TIMER4_KEY: 0,
+            constants.TIMER5_KEY: 0
+        }
+
+        return result
+
+    def print_metrics(self):
+        print("----------------------------------")
+        print("metrics result:")
+        print(f' - number of splits: {self.metrics[constants.SPLITS_KEY]}')
+        print(f' - number of backtracks: {self.metrics[constants.BACKTRACKS_KEY]}')
+        print(f' - number of unit clauses: {self.metrics[constants.UNIT_CLAUSES_KEY]}')
+        print(f' - number of pure literals: {self.metrics[constants.PURE_LITERALS_KEY]}')
+        print()
+        
+        # timers metrics
+        print(f' - timer1: {self.metrics[constants.TIMER1_KEY]} seconds')
+        print(f' - timer2: {self.metrics[constants.TIMER2_KEY]} seconds')
+        print(f' - timer3: {self.metrics[constants.TIMER3_KEY]} seconds')
+        print(f' - timer4: {self.metrics[constants.TIMER4_KEY]} seconds')
+        print(f' - timer5: {self.metrics[constants.TIMER5_KEY]} seconds')
+
+        print(f' - total game solving time: {self.metrics[constants.GAMETIME_KEY]} seconds')
+        
+        print("----------------------------------")
