@@ -90,13 +90,40 @@ class SatSolver:
 
         return self.split_formula(values)
 
-    def get_most_occurred_literal(self):
-        all_literals = self.formula.get_all_literals(True)
+    def get_literal_using_jeroslow(self):
+        all_literals = self.formula.get_all_literals_binary(True, 1)
+        
         most_occurred_literals = all_literals.most_common(1)
         if most_occurred_literals:
             return most_occurred_literals[0][0]
-        
+
         return None
+
+    def get_most_occurred_literal(self):
+        all_literals = self.formula.get_all_literals_by_sign(True)
+        
+        k = 100
+        max_score = 0
+        max_element = None
+
+        # most_occurred_literals = all_literals.most_common(1)
+        # if most_occurred_literals:
+            # return most_occurred_literals[0][0]
+
+        for literal_number, literal_occurrences in all_literals.items():
+            if literal_number < 0:
+                continue
+            
+            negative_number_occurrences = 0
+            negative_number = ((-1) * literal_number)
+            if negative_number in all_literals.keys():
+                negative_number_occurrences = all_literals[negative_number]
+            
+            current_score = (literal_occurrences + negative_number_occurrences) * 2**k + (literal_occurrences * negative_number_occurrences)
+            if current_score > max_score:
+                max_element = literal_number
+
+        return max_element
 
     def get_first_available_literal(self, values):
         for key, value in values.items():
@@ -128,8 +155,9 @@ class SatSolver:
     def split_formula(self, values):
         self.metrics[constants.SPLITS_KEY] += 1
         # if we have no remaining literals, then we have solved the task
-        first_non_set_literal = self.get_first_available_literal(values)
+        # first_non_set_literal = self.get_first_available_literal(values)
         # first_non_set_literal = self.get_most_occurred_literal()
+        first_non_set_literal = self.get_literal_using_jeroslow()
         if not first_non_set_literal:
             if self.formula.is_correct():
                 self.print_end_result(values)

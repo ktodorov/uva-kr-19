@@ -210,6 +210,50 @@ class Formula(BaseElement):
 
         return result
 
+    def get_all_literals_by_sign(self, only_unpopulated = False) -> dict:
+        result = Counter()
+
+        for element in self.elements:
+            if type(element) is Literal:
+                if only_unpopulated and element.has_value():
+                    continue
+                    
+                element_string = element.get_number()
+                if not element.get_sign():
+                    element_string = element_string * (-1)
+
+                result[element_string] = result[element_string] + 1
+            elif type(element) is Formula:
+                formula_literals = element.get_all_literals_by_sign(only_unpopulated)
+                
+                # add all elements from inner formula to current one
+                for key, value in formula_literals.items():
+                    result[key] = result[key] + value
+
+        return result
+
+    def get_all_literals_binary(self, only_unpopulated = False, number_of_levels = 1) -> dict:
+        if number_of_levels < 0:
+            return {}
+
+        result = Counter()
+
+        for element in self.elements:
+            if type(element) is Literal:
+                if only_unpopulated and element.has_value():
+                    continue
+                    
+                element_string = element.get_number()
+                result[element_string] = 1
+            elif type(element) is Formula:
+                formula_literals = element.get_all_literals_binary(only_unpopulated, number_of_levels - 1)
+                
+                # add all elements from inner formula to current one
+                for key, value in formula_literals.items():
+                    result[key] = result[key] + value
+
+        return result
+
     def get_unit_clauses(self) -> list:
         result = []
 
