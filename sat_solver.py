@@ -222,7 +222,7 @@ class SatSolver:
             softmax_denominator += np.exp(np.log(current_score))
 
 
-        print('denominator = ', softmax_denominator)
+        # print('denominator = ', softmax_denominator)
 
         if softmax_denominator == 0:
             return None
@@ -232,7 +232,7 @@ class SatSolver:
                     continue
                 l_distribution[literal_number] = (np.exp(l_scores[literal_number])+(1/softmax_denominator))/(softmax_denominator + (1/softmax_denominator))  ################################################################
 
-        print(l_distribution.values())
+        # print(l_distribution.values())
 
         literal = np.random.choice(list(l_distribution.keys()), p = list(l_distribution.values()))
 
