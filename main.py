@@ -9,14 +9,15 @@ import constants
 decoder = SudokuDecoder("examples/test-sudokus/1000 sudokus.txt", 3)
 # decoder = SudokuDecoder("examples/test-sudokus/damnhard.sdk.txt")
 
-split_method = SplitMethod.MOM # use this to change the split method
+split_method = SplitMethod.DEFAULT # use this to change the split method
 
 total_games = len(decoder.games)
 number_of_solved = 0
 i = 1
 
-# decoder.games = decoder.games[2:]
 currently_passed_time = 0
+
+print (f'Starting to solve games using {str(split_method)}:')
 
 for game in decoder.games:
     formula = Formula(Operation.AND)
@@ -27,7 +28,6 @@ for game in decoder.games:
     solved = sat_solver.solve()
     if solved:
         number_of_solved += 1
-    # break
 
     currently_passed_time += sat_solver.metrics[constants.GAMETIME_KEY]
 

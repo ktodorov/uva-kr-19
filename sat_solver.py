@@ -6,6 +6,7 @@ import copy
 import time
 from collections import defaultdict
 import constants
+import random
 
 class SatSolver:
     def __init__(self, formula: Formula, split_method: SplitMethod):
@@ -92,42 +93,6 @@ class SatSolver:
 
         return self.split_formula(values)
 
-    def get_literal_using_jeroslow(self):
-        all_literals = self.formula.get_all_literals_binary(True, 1)
-        
-        most_occurred_literals = all_literals.most_common(1)
-        if most_occurred_literals:
-            return most_occurred_literals[0][0]
-
-        return None
-
-    def get_most_occurred_literal(self):
-        all_literals = self.formula.get_all_literals_by_sign(True)
-        
-        k = 100
-        max_score = 0
-        max_element = None
-
-        for literal_number, literal_occurrences in all_literals.items():
-            if literal_number < 0:
-                continue
-            
-            negative_number_occurrences = 0
-            negative_number = ((-1) * literal_number)
-            if negative_number in all_literals.keys():
-                negative_number_occurrences = all_literals[negative_number]
-            
-            current_score = (literal_occurrences + negative_number_occurrences) * 2**k + (literal_occurrences * negative_number_occurrences)
-            if current_score > max_score:
-                max_element = literal_number
-
-        return max_element
-
-    def get_first_available_literal(self, values):
-        for key, value in values.items():
-            if value == None:
-                return key
-
     def validate_end_result(self, truth_clauses):
         for i in range(1, 10):
             for j in range(1, 10):
@@ -150,6 +115,9 @@ class SatSolver:
 
         return new_values
             
+
+    ###### Splitting
+
     def split_formula(self, values):
         self.metrics[constants.SPLITS_KEY] += 1
         # if we have no remaining literals, then we have solved the task
@@ -183,15 +151,63 @@ class SatSolver:
         self.metrics[constants.BACKTRACKS_KEY] += 1
         return False
 
-    def get_literal_for_splitting(self, values):
+    def get_literal_for_splitting(self, values : dict):
         if self.split_method == SplitMethod.DEFAULT:
-            first_non_set_literal = self.get_first_available_literal(values)
+            first_non_set_literal = self.get_literal_randomly(values)
         elif self.split_method == SplitMethod.MOM:
             first_non_set_literal = self.get_most_occurred_literal()
         elif self.split_method == SplitMethod.JEROSLOW:
             first_non_set_literal = self.get_literal_using_jeroslow()
+        elif self.split_method == SplitMethod.FIRST_AVAILABLE:
+            first_non_set_literal = self.get_first_available_literal(values)
+        else:
+            raise Exception(f'Split method not implemented : {self.split_method}')
         
         return first_non_set_literal
+
+    def get_literal_using_jeroslow(self):
+        all_literals = self.formula.get_all_literals_binary(True, 1)
+        
+        most_occurred_literals = all_literals.most_common(1)
+        if most_occurred_literals:
+            return most_occurred_literals[0][0]
+
+        return None
+
+    def get_most_occurred_literal(self):
+        all_literals = self.formula.get_all_literals_by_sign(True)
+        
+        k = 100
+        max_score = 0
+        max_element = None
+
+        for literal_number, literal_occurrences in all_literals.items():
+            if literal_number < 0:
+                continue
+            
+            negative_number_occurrences = 0
+            negative_number = ((-1) * literal_number)
+            if negative_number in all_literals.keys():
+                negative_number_occurrences = all_literals[negative_number]
+            
+            current_score = (literal_occurrences + negative_number_occurrences) * 2**k + (literal_occurrences * negative_number_occurrences)
+            if current_score > max_score:
+                max_element = literal_number
+
+        return max_element
+
+    def get_first_available_literal(self, values: dict):
+        for key, value in values.items():
+            if value == None:
+                return key
+            
+    def get_literal_randomly(self, values: dict):
+        random_keys = list(values.keys())
+        random.shuffle(random_keys)
+
+        for key in random_keys:
+            if values[key] == None:
+                return key
 
     def validate_end_result_clause(self, all_clauses, position_x, position_y):
         matches = 0
