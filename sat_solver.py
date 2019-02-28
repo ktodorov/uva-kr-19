@@ -76,7 +76,7 @@ class SatSolver:
             result = self.solve_using_values(new_values)
             if not result:
                 self.formula.reset_elements()
-                self.metrics[constants.BACKTRACKS_KEY] += 1
+                # self.metrics[constants.BACKTRACKS_KEY] += 1
             
             return result
 
@@ -89,7 +89,7 @@ class SatSolver:
             result = self.solve_using_values(new_values)
             if not result:
                 self.formula.reset_elements()
-                self.metrics[constants.BACKTRACKS_KEY] += 1
+                # self.metrics[constants.BACKTRACKS_KEY] += 1
             
             return result
 
@@ -152,7 +152,7 @@ class SatSolver:
             return True
 
         self.formula.reset_elements()
-        self.metrics[constants.BACKTRACKS_KEY] += 1
+        # self.metrics[constants.BACKTRACKS_KEY] += 1
         return False
 
     def get_literal_for_splitting(self, values : dict):
