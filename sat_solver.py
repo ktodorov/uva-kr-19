@@ -308,7 +308,7 @@ class SatSolver:
         literal_clause_occurrences = defaultdict(int)
 
         for clause in self.formula.elements:
-            size, literals = clause.get_clause_size()
+            size, literals = clause.get_clause_literals_size()
             for literal in literals:
                 literal_clause_sizes[literal] += size
                 literal_clause_occurrences[literal] += 1

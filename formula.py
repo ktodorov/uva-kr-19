@@ -223,6 +223,17 @@ class Formula(BaseElement):
 
         return counter, ls
 
+    def get_clause_literals_size(self) -> dict:
+        counter = 0
+        ls = []
+
+        for element in self.elements:
+            if type(element) is Literal:
+                ls.append(element.get_number())
+                counter += 1
+
+        return counter, ls
+
     def get_all_literals_by_sign(self, only_unpopulated = False) -> dict:
         result = Counter()
 
