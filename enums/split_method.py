@@ -5,3 +5,4 @@ class SplitMethod(Enum):
     MOM = 1
     JEROSLOW = 2
     FIRST_AVAILABLE = 3
+    pMOM = 4

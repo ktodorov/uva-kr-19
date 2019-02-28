@@ -7,6 +7,8 @@ import time
 from collections import defaultdict
 import constants
 import random
+from random import choices
+import numpy as np
 
 class SatSolver:
     def __init__(self, formula: Formula, split_method: SplitMethod):
@@ -156,6 +158,8 @@ class SatSolver:
             first_non_set_literal = self.get_literal_randomly(values)
         elif self.split_method == SplitMethod.MOM:
             first_non_set_literal = self.get_most_occurred_literal()
+        elif self.split_method == SplitMethod.pMOM:
+            first_non_set_literal = self.get_literal_from_distribution()
         elif self.split_method == SplitMethod.JEROSLOW:
             first_non_set_literal = self.get_literal_using_jeroslow()
         elif self.split_method == SplitMethod.FIRST_AVAILABLE:
@@ -195,6 +199,45 @@ class SatSolver:
                 max_element = literal_number
 
         return max_element
+
+    def get_literal_from_distribution(self):
+        all_literals = self.formula.get_all_literals_by_sign(True)
+        l_scores = {}
+        l_distribution = {}
+        k = 10
+        softmax_denominator = 0
+
+        for literal_number, literal_occurrences in all_literals.items():
+            if literal_number < 0:
+                continue
+
+            negative_number_occurrences = 0
+            negative_number = ((-1) * literal_number)
+            if negative_number in all_literals.keys():
+                negative_number_occurrences = all_literals[negative_number]
+
+            current_score = (literal_occurrences + negative_number_occurrences) * 2**k + (literal_occurrences * negative_number_occurrences)
+
+            l_scores[literal_number] = np.log(current_score)
+            softmax_denominator += np.exp(np.log(current_score))
+
+
+        print('denominator = ', softmax_denominator)
+
+        if softmax_denominator == 0:
+            return None
+        else:
+            for literal_number,_ in all_literals.items():
+                if literal_number < 0:
+                    continue
+                l_distribution[literal_number] = (np.exp(l_scores[literal_number])+(1/softmax_denominator))/(softmax_denominator + (1/softmax_denominator))  ################################################################
+
+        print(l_distribution.values())
+
+        literal = np.random.choice(list(l_distribution.keys()), p = list(l_distribution.values()))
+
+        return literal
+
 
     def get_first_available_literal(self, values: dict):
         for key, value in values.items():

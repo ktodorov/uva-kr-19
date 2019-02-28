@@ -9,7 +9,7 @@ import constants
 decoder = SudokuDecoder("examples/test-sudokus/1000 sudokus.txt", 3)
 # decoder = SudokuDecoder("examples/test-sudokus/damnhard.sdk.txt")
 
-split_method = SplitMethod.DEFAULT # use this to change the split method
+split_method = SplitMethod.pMOM # use this to change the split method
 
 total_games = len(decoder.games)
 number_of_solved = 0
