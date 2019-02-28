@@ -8,6 +8,8 @@ import constants
 decoder = SudokuDecoder("examples/test-sudokus/1000 sudokus.txt")
 # decoder = SudokuDecoder("examples/test-sudokus/damnhard.sdk.txt")
 
+split_method = SplitMethod.MOM # use this to change the split method
+
 total_games = len(decoder.games)
 number_of_solved = 0
 i = 1
@@ -20,7 +22,7 @@ for game in decoder.games:
     formula.add_game(game)
     formula.add_elements_from_file("examples/sudoku-rules.txt")
 
-    sat_solver = SatSolver(formula) 
+    sat_solver = SatSolver(formula, split_method) 
     solved = sat_solver.solve()
     if solved:
         number_of_solved += 1

@@ -1,4 +1,5 @@
 from formula import Formula
+from enums.split_method import SplitMethod
 from exceptions.unsatisfiable_error import UnsatisfiableError
 import utils
 import copy
@@ -7,8 +8,9 @@ from collections import defaultdict
 import constants
 
 class SatSolver:
-    def __init__(self, formula: Formula):
+    def __init__(self, formula: Formula, split_method: SplitMethod):
         self.formula = formula
+        self.split_method = split_method
         self.metrics = {}
 
     def solve(self) -> bool:
@@ -106,10 +108,6 @@ class SatSolver:
         max_score = 0
         max_element = None
 
-        # most_occurred_literals = all_literals.most_common(1)
-        # if most_occurred_literals:
-            # return most_occurred_literals[0][0]
-
         for literal_number, literal_occurrences in all_literals.items():
             if literal_number < 0:
                 continue
@@ -155,9 +153,8 @@ class SatSolver:
     def split_formula(self, values):
         self.metrics[constants.SPLITS_KEY] += 1
         # if we have no remaining literals, then we have solved the task
-        # first_non_set_literal = self.get_first_available_literal(values)
-        # first_non_set_literal = self.get_most_occurred_literal()
-        first_non_set_literal = self.get_literal_using_jeroslow()
+        first_non_set_literal = self.get_literal_for_splitting(values)
+
         if not first_non_set_literal:
             if self.formula.is_correct():
                 self.print_end_result(values)
@@ -185,6 +182,16 @@ class SatSolver:
         self.formula.reset_elements()
         self.metrics[constants.BACKTRACKS_KEY] += 1
         return False
+
+    def get_literal_for_splitting(self, values):
+        if self.split_method == SplitMethod.DEFAULT:
+            first_non_set_literal = self.get_first_available_literal(values)
+        elif self.split_method == SplitMethod.MOM:
+            first_non_set_literal = self.get_most_occurred_literal()
+        elif self.split_method == SplitMethod.JEROSLOW:
+            first_non_set_literal = self.get_literal_using_jeroslow()
+        
+        return first_non_set_literal
 
     def validate_end_result_clause(self, all_clauses, position_x, position_y):
         matches = 0
