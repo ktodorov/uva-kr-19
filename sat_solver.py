@@ -219,7 +219,9 @@ class SatSolver:
             else:
                 cs[size] = [literals]
 
-        k = 100
+        # print(cs)
+
+        k = 1
         max_score = 0
         max_element = None
         count_l = {}    #Key = literal, Value = [negated frequancy, normal frequency]
@@ -236,10 +238,16 @@ class SatSolver:
                     elif l > 0:
                         count_l[abs(l)] = [0,1]
 
-        for i,l in enumerate(list(count_l.keys())):
+        # print(count_l)
+
+        for l in list(count_l.keys()):
             current_score = (count_l[l][1] + count_l[abs(l)][0]) * 2**k + (count_l[abs(l)][1] * count_l[abs(l)][0])
             if current_score > max_score:
+                max_score = current_score
+                # print('l = ', l, ', score = ', max_score)
                 max_element = l
+
+        # print('l = ', max_element, ', score = ', max_score)
 
         return max_element
 

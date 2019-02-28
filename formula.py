@@ -218,7 +218,7 @@ class Formula(BaseElement):
 
         for element in self.elements:
             if type(element) is Literal:
-                ls.append(element.get_number())
+                ls.append(element.get_full_number())
                 counter += 1
 
         return counter, ls
