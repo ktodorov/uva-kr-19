@@ -11,15 +11,13 @@ import numpy as np
 ### configuration
 
 # how many games we want the decoder to load. None will load all
-max_games = 3
-
-
+max_games = 10
 
 # use this to change the split method
-split_method = SplitMethod.DEFAULT # use this to change the split method
+split_method = SplitMethod.OWN_HEURISTIC # use this to change the split method
 
 # how many runs of the current configuration we want. This makes sense only if the game is random
-runs = 3
+runs = 1
 
 # change this to load other game files
 game_file_name = "examples/test-sudokus/1000 sudokus.txt"

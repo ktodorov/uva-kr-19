@@ -6,3 +6,4 @@ class SplitMethod(Enum):
     JEROSLOW = 2
     FIRST_AVAILABLE = 3
     pMOM = 4
+    OWN_HEURISTIC = 5

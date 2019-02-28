@@ -9,6 +9,7 @@ import constants
 import random
 from random import choices
 import numpy as np
+import math
 
 class SatSolver:
     def __init__(self, formula: Formula, split_method: SplitMethod):
@@ -167,6 +168,8 @@ class SatSolver:
             first_non_set_literal = self.get_literal_using_jeroslow()
         elif self.split_method == SplitMethod.FIRST_AVAILABLE:
             first_non_set_literal = self.get_first_available_literal(values)
+        elif self.split_method == SplitMethod.OWN_HEURISTIC:
+            first_non_set_literal = self.get_own_heuristic_literal(values)
         else:
             raise Exception(f'Split method not implemented : {self.split_method}')
         
@@ -292,7 +295,44 @@ class SatSolver:
 
         return literal
 
+    def get_own_heuristic_literal(self, values, min_clauses = 3):
+        literal_clause_sizes = defaultdict(int)
+        literal_clause_occurrences = defaultdict(int)
 
+        for clause in self.formula.elements:
+            size, literals = clause.get_clause_size_2()
+            for literal in literals:
+                literal_clause_sizes[literal] += size
+                literal_clause_occurrences[literal] += 1
+                
+        lambda_value = 0.5
+        
+        min_score = math.inf
+        min_literal = None
+
+        for literal_number, literal_value in values.items():
+            if literal_value is not None:
+                continue
+            
+            if literal_clause_occurrences[literal_number] < min_clauses:
+                continue
+
+            if literal_number not in literal_clause_sizes.keys():
+                literal_clause_sizes[literal_number] = math.inf
+                literal_clause_occurrences[literal_number] = math.inf
+
+            current_score = (lambda_value) * literal_clause_sizes[literal_number]
+            current_score += (1 - lambda_value) * literal_clause_occurrences[literal_number]
+            # current_score = literal_clause_sizes[literal_number] * literal_clause_occurrences[literal_number]
+            if current_score < min_score:
+                min_score = current_score
+                min_literal = literal_number
+
+        if min_literal == None and min_clauses > 0:
+            return self.get_own_heuristic_literal(values, min_clauses - 1)
+
+        return min_literal
+            
     def get_first_available_literal(self, values: dict):
         for key, value in values.items():
             if value == None:

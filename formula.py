@@ -211,15 +211,15 @@ class Formula(BaseElement):
                     result[key] = result[key] + value
 
         return result
-
+    
     def get_clause_size(self) -> dict:
         counter = 0
         ls = []
 
         for element in self.elements:
             if type(element) is Literal:
-                ls.append(element.get_full_number())
-                counter +=1
+                ls.append(element.get_number())
+                counter += 1
 
         return counter, ls
 
