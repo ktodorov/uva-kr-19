@@ -1,9 +1,11 @@
 import math
 
 class SudokuDecoder:
-    def __init__(self, file_name, game_size = 9):
+    def __init__(self, file_name: str, max_games: int = None):
         self.games = []
-        self.game_size = game_size
+        self.game_size = None
+        self.max_games = max_games
+        
         self.read_file_data(file_name)
 
     def read_file_data(self, file_name):
@@ -12,6 +14,12 @@ class SudokuDecoder:
 
         # read every clause until we get 0, then go to the next line
         for line in file:
+            if self.max_games != None and self.max_games <= len(self.games):
+                return
+
+            if not self.game_size:
+                self.game_size = round(math.sqrt(len(line)))
+
             current_game = []
             for char_position, char in enumerate(line):
                 if not char.isdigit():

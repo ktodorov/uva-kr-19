@@ -2,10 +2,11 @@ from formula import Formula
 from sat_solver import SatSolver
 from sudoku_decoder import SudokuDecoder
 from enums.operation import Operation
+from enums.split_method import SplitMethod
 import time
 import constants
 
-decoder = SudokuDecoder("examples/test-sudokus/1000 sudokus.txt")
+decoder = SudokuDecoder("examples/test-sudokus/1000 sudokus.txt", 3)
 # decoder = SudokuDecoder("examples/test-sudokus/damnhard.sdk.txt")
 
 split_method = SplitMethod.MOM # use this to change the split method
