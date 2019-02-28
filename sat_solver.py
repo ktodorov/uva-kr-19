@@ -159,7 +159,8 @@ class SatSolver:
         if self.split_method == SplitMethod.DEFAULT:
             first_non_set_literal = self.get_literal_randomly(values)
         elif self.split_method == SplitMethod.MOM:
-            first_non_set_literal = self.get_most_occurred_literal(values)
+            # first_non_set_literal = self.get_most_occurred_literal(values)  #UNCOMMENT
+            first_non_set_literal = self.get_MOM(values)
         elif self.split_method == SplitMethod.pMOM:
             first_non_set_literal = self.get_literal_from_distribution(values)
         elif self.split_method == SplitMethod.JEROSLOW:
@@ -203,11 +204,49 @@ class SatSolver:
 
         return max_element
 
+
+    def get_MOM(self, values):
+        cs = {} #Key = clause_size, Value = list of literals
+        for clause in self.formula.elements:
+            # print(clause)
+            size, literals = clause.get_clause_size()
+
+            if size in cs.keys():
+                cs[size].append(literals)
+            else:
+                cs[size] = [literals]
+
+        k = 100
+        max_score = 0
+        max_element = None
+        count_l = {}    #Key = literal, Value = [negated frequancy, normal frequency]
+        for clause in cs[min(cs.keys())]:
+            for l in clause:
+                if abs(l) in count_l.keys():
+                    if l < 0:
+                        count_l[abs(l)][0] += 1
+                    elif l > 0:
+                        count_l[abs(l)][1] += 1
+                else:
+                    if l < 0:
+                        count_l[abs(l)] = [1,0]
+                    elif l > 0:
+                        count_l[abs(l)] = [0,1]
+
+        for i,l in enumerate(list(count_l.keys())):
+            current_score = (count_l[l][1] + count_l[abs(l)][0]) * 2**k + (count_l[abs(l)][1] * count_l[abs(l)][0])
+            if current_score > max_score:
+                max_element = l
+
+        return max_element
+
+
     def get_literal_from_distribution(self, values):
         l_scores = {}
         l_distribution = {}
-        k = 10
+        k = 100
         softmax_denominator = 0
+        denominator = 0
 
         for literal_number, literal_occurrences in utils.cache_dict.items():
             if literal_number is None or literal_number < 0:
@@ -223,13 +262,18 @@ class SatSolver:
 
             current_score = (literal_occurrences + negative_number_occurrences) * 2**k + (literal_occurrences * negative_number_occurrences)
 
-            l_scores[literal_number] = np.log(current_score)
-            softmax_denominator += np.exp(np.log(current_score))
+            # l_scores[literal_number] = np.log(current_score)
+            # softmax_denominator += np.exp(np.log(current_score))
 
+
+            l_scores[literal_number] = current_score
+            denominator += current_score
 
         # print('denominator = ', softmax_denominator)
 
-        if softmax_denominator == 0:
+        # if softmax_denominator == 0:
+        #     return None
+        if denominator == 0:
             return None
         else:
             for literal_number,_ in utils.cache_dict.items():
@@ -239,9 +283,10 @@ class SatSolver:
                 if values[literal_number] is not None:
                     continue
 
-                l_distribution[literal_number] = (np.exp(l_scores[literal_number])+(1/softmax_denominator))/(softmax_denominator + (1/softmax_denominator))  ################################################################
+                l_distribution[literal_number] = l_scores[literal_number]/sum(list(l_scores.values()))
 
-        # print(l_distribution.values())
+        # print(l_distribution.values(), '?')
+        # print(sum(list(l_distribution.values())))
 
         literal = np.random.choice(list(l_distribution.keys()), p = list(l_distribution.values()))
 
@@ -273,6 +318,7 @@ class SatSolver:
 
     def print_end_result(self, values):
         end_result = []
+
         for key in sorted(values):
             if values[key]:
                 end_result.append(key)

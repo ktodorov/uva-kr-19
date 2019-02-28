@@ -212,6 +212,17 @@ class Formula(BaseElement):
 
         return result
 
+    def get_clause_size(self) -> dict:
+        counter = 0
+        ls = []
+
+        for element in self.elements:
+            if type(element) is Literal:
+                ls.append(element.get_full_number())
+                counter +=1
+
+        return counter, ls
+
     def get_all_literals_by_sign(self, only_unpopulated = False) -> dict:
         result = Counter()
 
@@ -255,6 +266,8 @@ class Formula(BaseElement):
                     result[key] = result[key] + value
 
         return result
+
+
 
     def get_unit_clauses(self) -> list:
         result = []

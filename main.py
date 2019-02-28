@@ -6,6 +6,7 @@ from enums.split_method import SplitMethod
 import time
 import constants
 from csv_saver import CSVSaver
+import numpy as np
 
 ### configuration
 
@@ -15,7 +16,7 @@ max_games = 3
 
 
 # use this to change the split method
-split_method = SplitMethod.MOM # use this to change the split method
+split_method = SplitMethod.DEFAULT # use this to change the split method
 
 # how many runs of the current configuration we want. This makes sense only if the game is random
 runs = 3
@@ -64,7 +65,8 @@ for _ in range(runs):
     splits_by_run.append(splits)
     backtracks_by_run.append(backtracks)
 
-print(f'\nFinished. Total time - {currently_passed_time} seconds')
+
+print(f'\nFinished. Total time = {currently_passed_time} seconds, ', 'Avg #splits = ', np.mean(splits_by_run), ', Avg #backtracks = ', np.mean(backtracks_by_run) )
 
 print(f'\rSaving statistics data... 1/2', end='')
 csv_splits_saver = CSVSaver(f'data/splits_{split_method.name}.csv', splits_by_run)
