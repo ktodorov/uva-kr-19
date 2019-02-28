@@ -43,14 +43,16 @@ class Formula(BaseElement):
 
     def add_element(self, element):
         self.elements.append(element)
+        utils.cache_dict[element.get_full_number()] += 1
     
     def add_elements(self, elements):
         for element in elements:
-            self.elements.append(element)
+            self.add_element(element)
             
     def remove_elements(self, elements):
         for element in elements:
             self.elements.remove(element)
+            utils.cache_dict[element.get_full_number()] -= 1
 
     def get_elements_from_string(self, text):
         formula_strings = text.split(" ")
@@ -325,3 +327,6 @@ class Formula(BaseElement):
 
         result += ")"
         return result
+    
+    def get_full_number(self) -> int:
+        return None

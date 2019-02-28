@@ -1,6 +1,7 @@
 import time
 import math
 import numpy as np
+from collections import Counter, defaultdict
 
 timer1 = 0
 timer2 = 0
@@ -49,3 +50,6 @@ def average_chunks(list_to_split, max_chunks):
         result.append(chunk_average)
 
     return result
+
+cache_dict = Counter()
+

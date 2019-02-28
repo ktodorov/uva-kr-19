@@ -123,7 +123,8 @@ class SatSolver:
     def split_formula(self, values):
         self.metrics[constants.SPLITS_KEY] += 1
         # if we have no remaining literals, then we have solved the task
-        first_non_set_literal = self.get_literal_for_splitting(values)
+        first_non_set_literal, timer = utils.measure_function(lambda: self.get_literal_for_splitting(values))
+        self.metrics[constants.TIMER6_KEY] += timer
 
         if not first_non_set_literal:
             if self.formula.is_correct():
@@ -141,11 +142,12 @@ class SatSolver:
         # and try to solve with True as its value. If this fails try to solve with False
         # If this also fails, we abort the current iteration as it is unsolvable
 
-        new_values[first_non_set_literal] = True
+
+        new_values[first_non_set_literal] = False
         if self.solve_using_values(new_values):
             return True
 
-        new_values[first_non_set_literal] = False
+        new_values[first_non_set_literal] = True
         if self.solve_using_values(new_values):
             return True
 
@@ -157,7 +159,7 @@ class SatSolver:
         if self.split_method == SplitMethod.DEFAULT:
             first_non_set_literal = self.get_literal_randomly(values)
         elif self.split_method == SplitMethod.MOM:
-            first_non_set_literal = self.get_most_occurred_literal()
+            first_non_set_literal = self.get_most_occurred_literal(values)
         elif self.split_method == SplitMethod.pMOM:
             first_non_set_literal = self.get_literal_from_distribution()
         elif self.split_method == SplitMethod.JEROSLOW:
@@ -178,21 +180,24 @@ class SatSolver:
 
         return None
 
-    def get_most_occurred_literal(self):
-        all_literals = self.formula.get_all_literals_by_sign(True)
+    def get_most_occurred_literal(self, values):
+        # all_literals = self.formula.get_all_literals_by_sign(True)
         
         k = 100
         max_score = 0
         max_element = None
 
-        for literal_number, literal_occurrences in all_literals.items():
-            if literal_number < 0:
+        for literal_number, literal_occurrences in utils.cache_dict.items():
+            if literal_number is None or literal_number < 0:
+                continue
+
+            if values[literal_number] is not None:
                 continue
             
             negative_number_occurrences = 0
             negative_number = ((-1) * literal_number)
-            if negative_number in all_literals.keys():
-                negative_number_occurrences = all_literals[negative_number]
+            if negative_number in utils.cache_dict.keys():
+                negative_number_occurrences = utils.cache_dict[negative_number]
             
             current_score = (literal_occurrences + negative_number_occurrences) * 2**k + (literal_occurrences * negative_number_occurrences)
             if current_score > max_score:
@@ -270,7 +275,7 @@ class SatSolver:
                 # print (f'{key} 0')
         
         # assert that our result is OK
-        # self.validate_end_result(end_result)
+        self.validate_end_result(end_result)
 
     def create_metrics_container(self):
         result = {
@@ -282,7 +287,8 @@ class SatSolver:
             constants.TIMER2_KEY: 0,
             constants.TIMER3_KEY: 0,
             constants.TIMER4_KEY: 0,
-            constants.TIMER5_KEY: 0
+            constants.TIMER5_KEY: 0,
+            constants.TIMER6_KEY: 0
         }
 
         return result
@@ -302,6 +308,7 @@ class SatSolver:
         print(f' - timer3: {self.metrics[constants.TIMER3_KEY]} seconds')
         print(f' - timer4: {self.metrics[constants.TIMER4_KEY]} seconds')
         print(f' - timer5: {self.metrics[constants.TIMER5_KEY]} seconds')
+        print(f' - timer6: {self.metrics[constants.TIMER6_KEY]} seconds')
 
         print(f' - total game solving time: {self.metrics[constants.GAMETIME_KEY]} seconds')
         

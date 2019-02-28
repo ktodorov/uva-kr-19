@@ -25,6 +25,13 @@ class Literal(BaseElement):
     def get_number(self) -> int:
         return self.number
 
+    def get_full_number(self) -> int:
+        result = self.number
+        if self.negation:
+            result *= (-1)
+        
+        return result
+
     def get_sign(self) -> bool:
         return not self.negation
 
