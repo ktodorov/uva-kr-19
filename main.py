@@ -18,7 +18,7 @@ max_games = 3
 split_method = SplitMethod.MOM # use this to change the split method
 
 # how many runs of the current configuration we want. This makes sense only if the game is random
-runs = 1
+runs = 3
 
 # change this to load other game files
 game_file_name = "examples/test-sudokus/1000 sudokus.txt"

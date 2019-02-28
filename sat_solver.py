@@ -161,7 +161,7 @@ class SatSolver:
         elif self.split_method == SplitMethod.MOM:
             first_non_set_literal = self.get_most_occurred_literal(values)
         elif self.split_method == SplitMethod.pMOM:
-            first_non_set_literal = self.get_literal_from_distribution()
+            first_non_set_literal = self.get_literal_from_distribution(values)
         elif self.split_method == SplitMethod.JEROSLOW:
             first_non_set_literal = self.get_literal_using_jeroslow()
         elif self.split_method == SplitMethod.FIRST_AVAILABLE:
@@ -181,8 +181,6 @@ class SatSolver:
         return None
 
     def get_most_occurred_literal(self, values):
-        # all_literals = self.formula.get_all_literals_by_sign(True)
-        
         k = 100
         max_score = 0
         max_element = None
@@ -205,21 +203,23 @@ class SatSolver:
 
         return max_element
 
-    def get_literal_from_distribution(self):
-        all_literals = self.formula.get_all_literals_by_sign(True)
+    def get_literal_from_distribution(self, values):
         l_scores = {}
         l_distribution = {}
         k = 10
         softmax_denominator = 0
 
-        for literal_number, literal_occurrences in all_literals.items():
-            if literal_number < 0:
+        for literal_number, literal_occurrences in utils.cache_dict.items():
+            if literal_number is None or literal_number < 0:
+                continue
+
+            if values[literal_number] is not None:
                 continue
 
             negative_number_occurrences = 0
             negative_number = ((-1) * literal_number)
-            if negative_number in all_literals.keys():
-                negative_number_occurrences = all_literals[negative_number]
+            if negative_number in utils.cache_dict.keys():
+                negative_number_occurrences = utils.cache_dict[negative_number]
 
             current_score = (literal_occurrences + negative_number_occurrences) * 2**k + (literal_occurrences * negative_number_occurrences)
 
@@ -232,9 +232,13 @@ class SatSolver:
         if softmax_denominator == 0:
             return None
         else:
-            for literal_number,_ in all_literals.items():
-                if literal_number < 0:
+            for literal_number,_ in utils.cache_dict.items():
+                if literal_number is None or literal_number < 0:
                     continue
+
+                if values[literal_number] is not None:
+                    continue
+
                 l_distribution[literal_number] = (np.exp(l_scores[literal_number])+(1/softmax_denominator))/(softmax_denominator + (1/softmax_denominator))  ################################################################
 
         # print(l_distribution.values())
