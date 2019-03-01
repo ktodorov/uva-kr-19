@@ -24,7 +24,7 @@ class Formula(BaseElement):
 
         # read every clause until we get 0, then go to the next line
         for line in file:
-            current_line_formula = line.split("0")[0] # TODO: Maybe change this?
+            current_line_formula = line.split("\n")[0] # TODO: Maybe change this?
 
             new_elements = self.get_elements_from_string(current_line_formula)
             
@@ -59,10 +59,13 @@ class Formula(BaseElement):
         elements = []
 
         for formula_string in formula_strings:
-            if formula_string == '':
+            if formula_string == '' or formula_string == text:
                 continue
 
             if utils.is_digit(formula_string):
+                if (int(formula_string) == 0):
+                    break
+
                 literal = Literal(formula_string)
                 elements.append(literal)
             else:
