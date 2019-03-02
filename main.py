@@ -36,10 +36,14 @@ print (f'Starting to solve games using {str(split_method.name)} splitting method
 
 splits_by_run = []
 backtracks_by_run = []
+hints_by_run = []
+ratio_by_run = []
 
 for _ in range(runs):
     splits = []
     backtracks = []
+    hints = []
+    ratio = []
 
     for game in decoder.games:
         formula = Formula(Operation.AND)
@@ -54,6 +58,8 @@ for _ in range(runs):
         currently_passed_time += sat_solver.metrics[constants.GAMETIME_KEY]
         splits.append(sat_solver.metrics[constants.SPLITS_KEY])
         backtracks.append(sat_solver.metrics[constants.BACKTRACKS_KEY])
+        hints.append(sat_solver.metrics[constants.HINTS_KEY])
+        ratio.append(sat_solver.metrics[constants.SPLITS_TO_BACKTRACKS_KEY])
 
         avg_time = currently_passed_time / i
         time_left = ((total_games - i) * avg_time) / 60
@@ -62,6 +68,8 @@ for _ in range(runs):
 
     splits_by_run.append(splits)
     backtracks_by_run.append(backtracks)
+    hints_by_run.append(hints)
+    ratio_by_run.append(ratio)
 
 
 print(f'\nFinished. Total time = {currently_passed_time} seconds, ', 'Avg #splits = ', np.mean(splits_by_run), ', Avg #backtracks = ', np.mean(backtracks_by_run) )
@@ -73,5 +81,13 @@ csv_splits_saver.save_to_file(f'splits - {split_method.name}')
 print(f'\rSaving statistics data... 2/2', end='')
 csv_backtracks_saver = CSVSaver(f'data/backtracks_{split_method.name}.csv', backtracks_by_run)
 csv_backtracks_saver.save_to_file(f'backtracks - {split_method.name}')
+
+print(f'\rSaving statistics data... 3/4', end='')
+csv_hints_saver = CSVSaver(f'data/hints_{split_method.name}.csv', hints_by_run)
+csv_hints_saver.save_to_file(f'hints - {split_method.name}')
+
+print(f'\rSaving statistics data... 4/4', end='')
+csv_ratio_saver = CSVSaver(f'data/ratio_{split_method.name}.csv', ratio_by_run)
+csv_ratio_saver.save_to_file(f'ratio - {split_method.name}')
 
 print(f'\rSaving statistics data... Done')

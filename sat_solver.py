@@ -26,6 +26,8 @@ class SatSolver:
         current_values = defaultdict(lambda: None)
         result, game_time = utils.measure_function(lambda: self.solve_using_values(current_values))
         self.metrics[constants.GAMETIME_KEY] = game_time
+        if self.metrics[constants.BACKTRACKS_KEY] > 0:
+            self.metrics[constants.SPLITS_TO_BACKTRACKS_KEY] = self.metrics[constants.SPLITS_KEY] / self.metrics[constants.BACKTRACKS_KEY]
 
         # self.print_metrics()
 
@@ -65,6 +67,9 @@ class SatSolver:
                 self.formula.reset_elements()
                 self.metrics[constants.BACKTRACKS_KEY] += 1
                 return False
+
+            if not self.metrics[constants.HINTS_KEY]:
+                self.metrics[constants.HINTS_KEY] = len(unit_clauses)
 
             self.metrics[constants.TIMER5_KEY] += timer
             self.metrics[constants.UNIT_CLAUSES_KEY] += len(unit_clauses)
@@ -373,7 +378,7 @@ class SatSolver:
                 # print (f'{key} 0')
         
         # assert that our result is OK
-        self.validate_end_result(end_result)
+        # self.validate_end_result(end_result)
 
     def create_metrics_container(self):
         result = {
@@ -381,6 +386,8 @@ class SatSolver:
             constants.BACKTRACKS_KEY: 0,
             constants.UNIT_CLAUSES_KEY: 0,
             constants.PURE_LITERALS_KEY: 0,
+            constants.HINTS_KEY: 0,
+            constants.SPLITS_TO_BACKTRACKS_KEY: 0,
             constants.TIMER1_KEY: 0,
             constants.TIMER2_KEY: 0,
             constants.TIMER3_KEY: 0,
@@ -398,6 +405,8 @@ class SatSolver:
         print(f' - number of backtracks: {self.metrics[constants.BACKTRACKS_KEY]}')
         print(f' - number of unit clauses: {self.metrics[constants.UNIT_CLAUSES_KEY]}')
         print(f' - number of pure literals: {self.metrics[constants.PURE_LITERALS_KEY]}')
+        print(f' - number of hints: {self.metrics[constants.HINTS_KEY]}')
+        print(f' - splits to backtracks ratio: {self.metrics[constants.SPLITS_TO_BACKTRACKS_KEY]}')
         print()
         
         # timers metrics

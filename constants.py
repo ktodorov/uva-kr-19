@@ -2,6 +2,8 @@ SPLITS_KEY = "splits"
 BACKTRACKS_KEY = "backtracks"
 UNIT_CLAUSES_KEY = "unit_clauses"
 PURE_LITERALS_KEY = "pure_literals"
+HINTS_KEY = "hints"
+SPLITS_TO_BACKTRACKS_KEY = "splits_to_backtracks_ratio"
 
 # timer constants
 TIMER1_KEY = "timer1"
