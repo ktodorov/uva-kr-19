@@ -2,13 +2,9 @@ from formula import Formula
 from sat_solver import SatSolver
 from enums.operation import Operation
 from enums.split_method import SplitMethod
-import constants
 from file_saver import FileSaver
-import numpy as np
 import utils
 import argparse
-
-input_file = ".\\examples\\custom-example.txt"
 
 if __name__ == '__main__':
     # Initialize the parser
@@ -26,14 +22,14 @@ if __name__ == '__main__':
     if not arguments.input_file:
         raise Exception("Invalid input file")
 
-utils.lambda_value = 0.3
-utils.beta_value = 0.65
+utils.lambda_value = 0.45
+utils.beta_value = 0.5
 
 split_method = SplitMethod.DEFAULT
-if arguments.S == 2:
+if arguments.S == "2":
     split_method = SplitMethod.MOM
-elif arguments.S == 3:
-    split_method = SplitMethod.OWN_HEURISTIC
+elif arguments.S == "3":
+    split_method = SplitMethod.TK
 
 formula = Formula(Operation.AND)
 formula.add_elements_from_file(arguments.input_file)
@@ -41,5 +37,9 @@ formula.add_elements_from_file(arguments.input_file)
 sat_solver = SatSolver(formula, split_method) 
 solved, values = sat_solver.solve()
 
+output_file_name = f'{arguments.input_file}.out'
 file_saver = FileSaver()
-file_saver.save_values_in_dimacs(values, f'{arguments.input_file}.out')
+if solved:
+    file_saver.save_values_in_dimacs(values, output_file_name)
+else:
+    file_saver.save_values_in_dimacs({}, output_file_name)
