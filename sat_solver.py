@@ -24,7 +24,7 @@ class SatSolver:
         self.metrics = self.create_metrics_container()
 
         current_values = defaultdict(lambda: None)
-        result, game_time = utils.measure_function(lambda: self.solve_using_values(current_values))
+        (result, values), game_time = utils.measure_function(lambda: self.solve_using_values(current_values))
         self.metrics[constants.GAMETIME_KEY] = game_time
         if self.metrics[constants.BACKTRACKS_KEY] > 0:
             self.metrics[constants.SPLITS_TO_BACKTRACKS_KEY] = self.metrics[constants.SPLITS_KEY] / self.metrics[constants.BACKTRACKS_KEY]
@@ -36,7 +36,7 @@ class SatSolver:
         # print(f'utils.timer3 - {utils.timer3}')
         # print(f'utils.timer4 - {utils.timer4}')
 
-        return result
+        return result, values
 
     def solve_using_values(self, values): #################
         # apply current values to the literals
@@ -48,7 +48,7 @@ class SatSolver:
         self.metrics[constants.TIMER2_KEY] += timer
         if is_correct:
             self.print_end_result(values)
-            return True
+            return True, values
         
         # simplify the formula
         _, timer = utils.measure_function(self.formula.simplify)
@@ -66,7 +66,7 @@ class SatSolver:
             if not valid_unit_clauses:
                 self.formula.reset_elements()
                 self.metrics[constants.BACKTRACKS_KEY] += 1
-                return False
+                return False, None
 
             if not self.metrics[constants.HINTS_KEY]:
                 self.metrics[constants.HINTS_KEY] = len(unit_clauses)
@@ -135,11 +135,11 @@ class SatSolver:
         if not first_non_set_literal:
             if self.formula.is_correct():
                 self.print_end_result(values)
-                return True
+                return True, values
             else:
                 self.formula.reset_elements()
                 self.metrics[constants.BACKTRACKS_KEY] += 1
-                return False
+                return False, None
 
         new_values = copy.deepcopy(values)
 
@@ -148,18 +148,17 @@ class SatSolver:
         # and try to solve with True as its value. If this fails try to solve with False
         # If this also fails, we abort the current iteration as it is unsolvable
 
-
         new_values[first_non_set_literal] = False
         if self.solve_using_values(new_values):
-            return True
+            return True, new_values
 
         new_values[first_non_set_literal] = True
         if self.solve_using_values(new_values):
-            return True
+            return True, new_values
 
         self.formula.reset_elements()
-        # self.metrics[constants.BACKTRACKS_KEY] += 1
-        return False
+
+        return False, None
 
     def get_literal_for_splitting(self, values : dict):
         if self.split_method == SplitMethod.DEFAULT:
