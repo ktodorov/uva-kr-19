@@ -14,7 +14,7 @@ import numpy as np
 max_games = 10
 
 # use this to change the split method
-split_method = SplitMethod.OWN_HEURISTIC # use this to change the split method
+split_method = SplitMethod.TK # use this to change the split method
 
 # how many runs of the current configuration we want. This makes sense only if the game is random
 runs = 1

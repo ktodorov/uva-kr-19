@@ -204,7 +204,7 @@ class SatSolver:
             else:
                 cs[size] = [literals]
 
-        k = 100
+        k = 1
         count_literals = {}    #Key = literal, Value = [negated frequency, normal frequency]
         min_size = min(cs.keys())
         for clause in cs[min_size]:
