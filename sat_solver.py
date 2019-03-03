@@ -31,14 +31,9 @@ class SatSolver:
 
         # self.print_metrics()
 
-        # print(f'utils.timer1 - {utils.timer1}')
-        # print(f'utils.timer2 - {utils.timer2}')
-        # print(f'utils.timer3 - {utils.timer3}')
-        # print(f'utils.timer4 - {utils.timer4}')
-
         return result, values
 
-    def solve_using_values(self, values): #################
+    def solve_using_values(self, values) -> (bool, dict):
         # apply current values to the literals
         _, timer = utils.measure_function(lambda: self.formula.apply_values(values))
         self.metrics[constants.TIMER1_KEY] += timer
@@ -48,7 +43,7 @@ class SatSolver:
         self.metrics[constants.TIMER2_KEY] += timer
         if is_correct:
             self.print_end_result(values)
-            return True, values
+            return (True, values)
         
         # simplify the formula
         _, timer = utils.measure_function(self.formula.simplify)
@@ -66,7 +61,7 @@ class SatSolver:
             if not valid_unit_clauses:
                 self.formula.reset_elements()
                 self.metrics[constants.BACKTRACKS_KEY] += 1
-                return False, None
+                return (False, None)
 
             if not self.metrics[constants.HINTS_KEY]:
                 self.metrics[constants.HINTS_KEY] = len(unit_clauses)
@@ -79,12 +74,11 @@ class SatSolver:
             # try to solve with the new values
             # if we fail, we must not forget to reset the elements 
             # which were changed during the current iteration
-            result = self.solve_using_values(new_values)
+            (result, result_values) = self.solve_using_values(new_values)
             if not result:
                 self.formula.reset_elements()
-                # self.metrics[constants.BACKTRACKS_KEY] += 1
             
-            return result
+            return (result, result_values)
 
         # get all pure literals and assign them values
         # then try to solve with the new values
@@ -92,14 +86,14 @@ class SatSolver:
         if pure_literals:
             self.metrics[constants.PURE_LITERALS_KEY] += len(pure_literals)
             new_values = self.create_new_values(values, pure_literals)
-            result = self.solve_using_values(new_values)
+            result, result_values = self.solve_using_values(new_values)
             if not result:
                 self.formula.reset_elements()
-                # self.metrics[constants.BACKTRACKS_KEY] += 1
             
-            return result
+            return (result, result_values)
 
-        return self.split_formula(values)
+        (result, result_values) = self.split_formula(values)
+        return (result, result_values)
 
     def validate_end_result(self, truth_clauses):
         for i in range(1, 10):
@@ -121,8 +115,7 @@ class SatSolver:
             literal_string = single_literal.get_number()
             new_values[literal_string] = single_literal.get_sign()
 
-        return new_values
-            
+        return new_values            
 
     ###### Splitting
 
@@ -135,11 +128,11 @@ class SatSolver:
         if not first_non_set_literal:
             if self.formula.is_correct():
                 self.print_end_result(values)
-                return True, values
+                return (True, values)
             else:
                 self.formula.reset_elements()
                 self.metrics[constants.BACKTRACKS_KEY] += 1
-                return False, None
+                return (False, None)
 
         new_values = copy.deepcopy(values)
 
@@ -149,31 +142,31 @@ class SatSolver:
         # If this also fails, we abort the current iteration as it is unsolvable
 
         new_values[first_non_set_literal] = False
-        if self.solve_using_values(new_values):
-            return True, new_values
+        (solved, result_values) = self.solve_using_values(new_values)
+        if solved:
+            return (True, result_values)
 
         new_values[first_non_set_literal] = True
-        if self.solve_using_values(new_values):
-            return True, new_values
+        (solved, result_values) = self.solve_using_values(new_values)
+        if solved:
+            return (True, result_values)
 
         self.formula.reset_elements()
-
-        return False, None
+        return (False, None)
 
     def get_literal_for_splitting(self, values : dict):
         if self.split_method == SplitMethod.DEFAULT:
             first_non_set_literal = self.get_literal_randomly(values)
         elif self.split_method == SplitMethod.MOM:
-            # first_non_set_literal = self.get_most_occurred_literal(values)  #UNCOMMENT
-            first_non_set_literal = self.get_MOM(values)
+            first_non_set_literal = self.get_mom_literal(values)
         elif self.split_method == SplitMethod.pMOM:
             first_non_set_literal = self.get_literal_from_distribution(values)
         elif self.split_method == SplitMethod.JEROSLOW:
             first_non_set_literal = self.get_literal_using_jeroslow()
         elif self.split_method == SplitMethod.FIRST_AVAILABLE:
             first_non_set_literal = self.get_first_available_literal(values)
-        elif self.split_method == SplitMethod.OWN_HEURISTIC:
-            first_non_set_literal = self.get_own_heuristic_literal(values)
+        elif self.split_method == SplitMethod.TK:
+            first_non_set_literal = self.get_tk_literal(values)
         else:
             raise Exception(f'Split method not implemented : {self.split_method}')
         
@@ -188,34 +181,22 @@ class SatSolver:
 
         return None
 
-    def get_most_occurred_literal(self, values):
-        k = 100
+    def get_mom_literal(self, values: dict) -> int:
+        mom_scores = self.get_mom_scores(values)
+
         max_score = 0
         max_element = None
 
-        for literal_number, literal_occurrences in utils.cache_dict.items():
-            if literal_number is None or literal_number < 0:
-                continue
-
-            if values[literal_number] is not None:
-                continue
-            
-            negative_number_occurrences = 0
-            negative_number = ((-1) * literal_number)
-            if negative_number in utils.cache_dict.keys():
-                negative_number_occurrences = utils.cache_dict[negative_number]
-            
-            current_score = (literal_occurrences + negative_number_occurrences) * 2**k + (literal_occurrences * negative_number_occurrences)
-            if current_score > max_score:
+        for literal_number, literal_mom_score in mom_scores.items():
+            if literal_mom_score > max_score:
+                max_score = literal_mom_score
                 max_element = literal_number
 
         return max_element
 
-
-    def get_MOM(self, values):
+    def get_mom_scores(self, values: dict) -> dict:
         cs = {} #Key = clause_size, Value = list of literals
         for clause in self.formula.elements:
-            # print(clause)
             size, literals = clause.get_clause_size()
 
             if size in cs.keys():
@@ -223,44 +204,38 @@ class SatSolver:
             else:
                 cs[size] = [literals]
 
-        # print(cs)
-
-        k = 1
-        max_score = 0
-        max_element = None
-        count_l = {}    #Key = literal, Value = [negated frequancy, normal frequency]
-        for clause in cs[min(cs.keys())]:
-            for l in clause:
-                if abs(l) in count_l.keys():
-                    if l < 0:
-                        count_l[abs(l)][0] += 1
-                    elif l > 0:
-                        count_l[abs(l)][1] += 1
+        k = 100
+        count_literals = {}    #Key = literal, Value = [negated frequency, normal frequency]
+        min_size = min(cs.keys())
+        for clause in cs[min_size]:
+            for literal in clause:
+                abs_literal = abs(literal)
+                if abs_literal in count_literals.keys():
+                    if literal < 0:
+                        count_literals[abs_literal][0] += 1
+                    elif literal > 0:
+                        count_literals[abs_literal][1] += 1
                 else:
-                    if l < 0:
-                        count_l[abs(l)] = [1,0]
-                    elif l > 0:
-                        count_l[abs(l)] = [0,1]
+                    if literal < 0:
+                        count_literals[abs_literal] = [1,0]
+                    elif literal > 0:
+                        count_literals[abs_literal] = [0,1]
 
-        # print(count_l)
+        result = {}
 
-        for l in list(count_l.keys()):
-            current_score = (count_l[l][1] + count_l[abs(l)][0]) * 2**k + (count_l[abs(l)][1] * count_l[abs(l)][0])
-            if current_score > max_score:
-                max_score = current_score
-                # print('l = ', l, ', score = ', max_score)
-                max_element = l
+        for literal in list(count_literals.keys()):
+            if values[literal] is not None:
+                continue
 
-        # print('l = ', max_element, ', score = ', max_score)
-
-        return max_element
-
+            current_score = (count_literals[literal][1] + count_literals[literal][0]) * 2**k + (count_literals[literal][1] * count_literals[literal][0])
+            result[literal] = current_score
+            
+        return result
 
     def get_literal_from_distribution(self, values):
         l_scores = {}
         l_distribution = {}
         k = 100
-        softmax_denominator = 0
         denominator = 0
 
         for literal_number, literal_occurrences in utils.cache_dict.items():
@@ -277,17 +252,9 @@ class SatSolver:
 
             current_score = (literal_occurrences + negative_number_occurrences) * 2**k + (literal_occurrences * negative_number_occurrences)
 
-            # l_scores[literal_number] = np.log(current_score)
-            # softmax_denominator += np.exp(np.log(current_score))
-
-
             l_scores[literal_number] = current_score
             denominator += current_score
 
-        # print('denominator = ', softmax_denominator)
-
-        # if softmax_denominator == 0:
-        #     return None
         if denominator == 0:
             return None
         else:
@@ -300,14 +267,11 @@ class SatSolver:
 
                 l_distribution[literal_number] = l_scores[literal_number]/sum(list(l_scores.values()))
 
-        # print(l_distribution.values(), '?')
-        # print(sum(list(l_distribution.values())))
-
         literal = np.random.choice(list(l_distribution.keys()), p = list(l_distribution.values()))
 
         return literal
 
-    def get_own_heuristic_literal(self, values, min_clauses = 3):
+    def get_tk_literal(self, values):
         literal_clause_sizes = defaultdict(int)
         literal_clause_occurrences = defaultdict(int)
 
@@ -317,32 +281,26 @@ class SatSolver:
                 literal_clause_sizes[literal] += size
                 literal_clause_occurrences[literal] += 1
                 
-        lambda_value = 0.5
-        
         min_score = math.inf
         min_literal = None
 
-        for literal_number, literal_value in values.items():
-            if literal_value is not None:
+        mom_scores = self.get_mom_scores(values)
+        alpha_value = 0.45
+        beta_value = 0.5
+        third_coefficient = 0.05
+
+        for literal_number in mom_scores.keys():
+            if values[literal_number] is not None:
                 continue
             
-            if literal_clause_occurrences[literal_number] < min_clauses:
-                continue
-
-            if literal_number not in literal_clause_sizes.keys():
-                literal_clause_sizes[literal_number] = math.inf
-                literal_clause_occurrences[literal_number] = math.inf
-
-            current_score = (lambda_value) * literal_clause_sizes[literal_number]
-            current_score += (1 - lambda_value) * literal_clause_occurrences[literal_number]
-            # current_score = literal_clause_sizes[literal_number] * literal_clause_occurrences[literal_number]
+            current_score = (alpha_value * literal_clause_sizes[literal_number]) # sum of clause sizes
+            current_score -= (beta_value * literal_clause_occurrences[literal_number]) # clause occurrences
+            current_score -= (third_coefficient * mom_scores[literal_number]) # MOM score
+            
             if current_score < min_score:
                 min_score = current_score
                 min_literal = literal_number
-
-        if min_literal == None and min_clauses > 0:
-            return self.get_own_heuristic_literal(values, min_clauses - 1)
-
+            
         return min_literal
             
     def get_first_available_literal(self, values: dict):

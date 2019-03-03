@@ -6,7 +6,9 @@ class FileSaver():
 
     def save_values_in_dimacs(self, values: dict, file_name: str):
         output_file = open(file_name, "w")
-        output_file.write(f'p cnf {len(values.keys())} {len(values.keys())}\n')
+        
+        if values:
+            output_file.write(f'p cnf {len(values.keys())} {len(values.keys())}\n')
 
         for value_key, value in values.items():
             line_str = str(value_key)

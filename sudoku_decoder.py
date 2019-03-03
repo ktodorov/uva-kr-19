@@ -10,7 +10,6 @@ class SudokuDecoder:
 
     def read_file_data(self, file_name):
         file = open(file_name, "r")
-        self.games = []
 
         # read every clause until we get 0, then go to the next line
         for line in file:

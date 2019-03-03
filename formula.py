@@ -20,11 +20,14 @@ class Formula(BaseElement):
         
     def add_elements_from_file(self, file_name):
         file = open(file_name, "r")
-        next(file) # skip first line
+        
+        # next(file) # skip first line
 
         # read every clause until we get 0, then go to the next line
         for line in file:
-            current_line_formula = line.split("\n")[0] # TODO: Maybe change this?
+            current_line_formula = line.split("\n")[0]
+            if current_line_formula.startswith('p cnf'):
+                continue
 
             new_elements = self.get_elements_from_string(current_line_formula)
             
@@ -215,7 +218,7 @@ class Formula(BaseElement):
 
         return result
     
-    def get_clause_size(self) -> dict:
+    def get_clause_size(self) -> (int, dict):
         counter = 0
         ls = []
 
@@ -226,7 +229,7 @@ class Formula(BaseElement):
 
         return counter, ls
 
-    def get_clause_literals_size(self) -> dict:
+    def get_clause_literals_size(self) -> (int, dict):
         counter = 0
         ls = []
 
