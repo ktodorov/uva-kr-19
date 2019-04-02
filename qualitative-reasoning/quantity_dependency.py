@@ -1,4 +1,4 @@
-from dependency_type import DependencyType
+from enums.dependency_type import DependencyType
 # from quantity import Quantity
 
 class QuantityDependency:

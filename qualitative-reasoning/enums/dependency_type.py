@@ -6,3 +6,4 @@ class DependencyType(Enum):
     NegativeInfluence = 2
     PositiveProportionality = 3
     NegativeProportionality = 4
+    Constraint = 5

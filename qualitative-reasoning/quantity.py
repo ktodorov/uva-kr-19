@@ -1,12 +1,10 @@
 from typing import List
 
 from node import Node
-from quantity_dependency import QuantityDependency
+from quantity_space import QuantitySpace
 
-class Quantity(Node):
-    def __init__(self, label: str, dependencies: List[QuantityDependency] = []):
-        super(Quantity, self).__init__(label, 'black')
-        self.dependencies = dependencies
 
-    def add_dependencies(self, dependencies: List[QuantityDependency]):
-        self.dependencies.extend(dependencies)
+class Quantity():
+    def __init__(self, label: str, spaces: List[QuantitySpace] = []):
+        self.label = label
+        self.spaces = spaces
