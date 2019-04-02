@@ -2,33 +2,38 @@ import networkx as nx
 import matplotlib.pyplot as plt
 from typing import List
 
-from node import Node
+from quantity import Quantity
+from quantity_dependency import QuantityDependency
 
 def create_representation_graph(
-    nodes : List[Node],
+    quantities: List[Quantity],
+    dependencies: List[QuantityDependency],
+    font_size: int= 10,
     font_color: str = 'black', 
     node_size: int = 500,
     file_path: str = None):
     
     G=nx.DiGraph()
     
-    # add all nodes
-    G.add_nodes_from([node.label for node in nodes])
+    # add all quantities
+    G.add_nodes_from([quantity.label for quantity in quantities])
     
     node_color_map = []
 
-    # add the edges between the nodes
+    # add the edges between the quantities
     # also populate the node_color_map
-    for node in nodes:
-        for node_connection in node.connections:
-            G.add_edge(node.label, node_connection)
+    for dependency in dependencies:
+        G.add_edge(dependency.start.label, dependency.end.label)
+        # for quantity_connection in quantity.connections:
+        #     G.add_edge(quantity.label, quantity_connection)
         
-        node_color_map.append(node.color)
+        # quantity_color_map.append(quantity.color)
 
     nx.draw(
         G, 
+        font_size = font_size,
         font_color = font_color, 
-        node_color = node_color_map, 
+        # node_color = node_color_map,
         with_labels = True, 
         node_size = node_size)
 
