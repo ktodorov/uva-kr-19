@@ -44,7 +44,7 @@ class QualitativeModel:
         return filtered_combinations
 
     def filter_states(self, all_combinations):
-        
+
         states_to_remove = self.find_invalid_constraint_states(
             all_combinations)
 
@@ -84,7 +84,7 @@ class QualitativeModel:
 
         nodes = []
         edges = []
-        
+
         for i, start_state in enumerate(all_combinations):
             start_string = utils.get_state_string(start_state)
             nodes.append(start_string)
@@ -97,8 +97,8 @@ class QualitativeModel:
                     end_string = utils.get_state_string(end_state)
                     edges.append((start_string, end_string))
 
-        utils.create_representation_graph(nodes, edges)
-
+        print(len(edges))
+        # utils.create_representation_graph(nodes, edges)
 
     # Constraint check
 
@@ -153,10 +153,10 @@ class QualitativeModel:
                     should_skip['positive'] = True
                 elif dependency_type == DependencyType.NegativeInfluence:
                     should_skip['negative'] = True
-            
+
             if should_skip['positive'] and should_skip['negative']:
                 continue
-            
+
             for start_state_label, dependency_type, in self.incoming_dependencies[quantity[0].label].items():
                 if dependency_type != DependencyType.PositiveInfluence:
                     continue
@@ -197,10 +197,10 @@ class QualitativeModel:
                     should_skip['positive'] = True
                 elif dependency_type == DependencyType.NegativeInfluence:
                     should_skip['negative'] = True
-            
+
             if should_skip['positive'] and should_skip['negative']:
                 continue
-            
+
             for start_state_label, dependency_type, in self.incoming_dependencies[quantity[0].label].items():
                 if dependency_type != DependencyType.NegativeInfluence:
                     continue
@@ -241,7 +241,7 @@ class QualitativeModel:
                     should_skip['positive'] = True
                 elif dependency_type == DependencyType.NegativeProportionality:
                     should_skip['negative'] = True
-            
+
             if should_skip['positive'] and should_skip['negative']:
                 continue
 
@@ -282,7 +282,7 @@ class QualitativeModel:
                     should_skip['positive'] = True
                 elif dependency_type == DependencyType.NegativeProportionality:
                     should_skip['negative'] = True
-            
+
             if should_skip['positive'] and should_skip['negative']:
                 continue
 
@@ -307,6 +307,21 @@ class QualitativeModel:
         return True
 
     def transition_exists(self, start_state, end_state):
+        # If we have quantity which is not constrained -
+        # it cannot change with more than two steps in one transition
+        for i, start_quantity in enumerate(start_state):
+            if not self.constraint_dependencies[start_quantity[0].label]:
+                if ((start_quantity[1].label == '0' and end_state[i][1].label == 'max') or
+                        start_quantity[1].label == 'max' and end_state[i][1].label == '0'):
+
+                    return False
+
+            if (start_quantity[1].label != end_state[i][1].label and start_quantity[2] == '0'):
+                if not self.incoming_dependencies[start_quantity[0].label]:
+                    return False
+                else:
+                    pass # ????
+
         return True
 
     def print_combinations(self, all_combinations):
@@ -322,4 +337,3 @@ class QualitativeModel:
                     f'({quantity[0].label}, {quantity[1].label}, {quantity[2]}), ', end='')
 
             print(')')
-
