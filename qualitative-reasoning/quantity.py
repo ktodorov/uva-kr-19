@@ -8,3 +8,4 @@ class Quantity():
     def __init__(self, label: str, spaces: List[QuantitySpace] = []):
         self.label = label
         self.spaces = spaces
+        self.gradients = ['+', '0', '-']

@@ -47,7 +47,8 @@ def create_representation_graph(
 def get_quantity_states(quantity: Quantity) -> List[str]:
     quantity_states = []
     for quantity_space in quantity.spaces:
-        # quantity_states.append(f'{quantity.label}_{quantity_space.label}')
-        quantity_states.append((quantity, quantity_space))
+        for quantity_gradient in quantity.gradients:
+            # quantity_states.append(f'{quantity.label}_{quantity_space.label}')
+            quantity_states.append((quantity, quantity_space, quantity_gradient))
 
     return quantity_states

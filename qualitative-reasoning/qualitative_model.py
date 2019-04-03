@@ -43,6 +43,7 @@ class QualitativeModel:
 
     def visualize_states(self):
         all_combinations = self.generate_all_combinations()
+        print(len(all_combinations))
 
         # for i, start_state in enumerate(all_combinations):
         #     for j, end_state in enumerate(all_combinations):
