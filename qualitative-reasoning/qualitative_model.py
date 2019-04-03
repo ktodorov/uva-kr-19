@@ -10,26 +10,27 @@ import itertools
 class QualitativeModel:
     def __init__(self, quantities: List[Quantity], dependencies: List[QuantityDependency]):
         self.quantities = quantities
-        self.dependencies = {}
+        self.incoming_dependencies = {}
+        self.outgoing_dependencies = {}
+        self.constraint_dependencies = {}
 
-        # initialize the dependencies dictionary
+        # initialize the dependencies dictionaries
         for quantity in self.quantities:
-            self.dependencies[quantity.label] = []
+            self.incoming_dependencies[quantity.label] = {}
+            self.outgoing_dependencies[quantity.label] = {}
+            self.constraint_dependencies[quantity.label] = {}
 
-    def add_quantity_dependency(self, quantity1: Quantity, quantity2: Quantity, dependency_type: DependencyType):
-        if not (quantity1 in self.quantities):
-            raise Exception(
-                "Quantity1 is not part of this qualitative model. Add it to the quantities before assigning dependency")
+        for dependency in dependencies:
+            if dependency.type == DependencyType.Constraint:
+                if dependency.start.label not in self.constraint_dependencies[dependency.end.label].keys():
+                    self.constraint_dependencies[dependency.end.label][dependency.start.label] = [
+                    ]
 
-        if not (quantity2 in self.quantities):
-            raise Exception(
-                "Quantity2 is not part of this qualitative model. Add it to the quantities before assigning dependency")
-
-        new_dependency = (quantity2.label, dependency_type)
-        if new_dependency in self.dependencies[quantity1.label]:
-            raise Exception("This dependency is already registered")
-
-        self.dependencies[quantity1.label].append(new_dependency)
+                self.constraint_dependencies[dependency.end.label][dependency.start.label].append(
+                    (dependency.start_space, dependency.end_space))
+            else:
+                self.outgoing_dependencies[dependency.start.label][dependency.end.label] = dependency.type
+                self.incoming_dependencies[dependency.end.label][dependency.start.label] = dependency.type
 
     def generate_all_combinations(self) -> List[List[str]]:
         states_per_quantity = []
@@ -39,17 +40,286 @@ class QualitativeModel:
                 states_per_quantity.append(quantity_states)
 
         all_combinations = list(itertools.product(*states_per_quantity))
+        filtered_combinations = self.filter_states(all_combinations)
+        return filtered_combinations
+
+    def filter_states(self, all_combinations):
+        
+        states_to_remove = self.find_invalid_constraint_states(
+            all_combinations)
+
+        for index in reversed(states_to_remove):
+            all_combinations.pop(index)
+
+        states_to_remove = self.find_invalid_positive_influence_states(
+            all_combinations)
+
+        for index in reversed(states_to_remove):
+            all_combinations.pop(index)
+
+        states_to_remove = self.find_invalid_negative_influence_states(
+            all_combinations)
+
+        for index in reversed(states_to_remove):
+            all_combinations.pop(index)
+
+        states_to_remove = self.find_invalid_positive_proportionality_states(
+            all_combinations)
+
+        for index in reversed(states_to_remove):
+            all_combinations.pop(index)
+
+        states_to_remove = self.find_invalid_negative_proportionality_states(
+            all_combinations)
+
+        for index in reversed(states_to_remove):
+            all_combinations.pop(index)
+
         return all_combinations
 
     def visualize_states(self):
         all_combinations = self.generate_all_combinations()
-        print(len(all_combinations))
 
-        # for i, start_state in enumerate(all_combinations):
-        #     for j, end_state in enumerate(all_combinations):
-        #         if i == j:
-        #             continue
+        # self.print_combinations(all_combinations)
 
-        #         for k in range(len(start_state)):
-                    # if start_state[k][1] != end_state[k][2]:
-                        
+        nodes = []
+        edges = []
+        
+        for i, start_state in enumerate(all_combinations):
+            start_string = utils.get_state_string(start_state)
+            nodes.append(start_string)
+
+            for j, end_state in enumerate(all_combinations):
+                if i == j:
+                    continue
+
+                if self.transition_exists(start_state, end_state):
+                    end_string = utils.get_state_string(end_state)
+                    edges.append((start_string, end_string))
+
+        utils.create_representation_graph(nodes, edges)
+
+
+    # Constraint check
+
+    def find_invalid_constraint_states(self, states) -> List[int]:
+        states_to_remove = []
+
+        # remove the constraints
+        for i, state in enumerate(states):
+            if not self.is_valid_constraint_state(state):
+                states_to_remove.append(i)
+
+        return states_to_remove
+
+    def is_valid_constraint_state(self, state) -> bool:
+        for j, quantity in enumerate(state):
+            for constraint_state_label, constraint_spaces, in self.constraint_dependencies[quantity[0].label].items():
+                # check if we have the constraint_state_label with the constraint_space currently and
+                # if yes, the quantity should be with the same value
+                for k, quantity2 in enumerate(state):
+                    if j == k or quantity2[0].label != constraint_state_label:
+                        continue
+
+                    for constraint_tuple in constraint_spaces:
+                        if quantity2[1].label != constraint_tuple[0].label:
+                            continue
+
+                        if quantity[1].label != constraint_tuple[1].label:
+                            return False
+
+        return True
+
+    # I+ check
+
+    def find_invalid_positive_influence_states(self, states) -> List[int]:
+        states_to_remove = []
+
+        for i, state in enumerate(states):
+            if not self.is_valid_positive_influence_state(state):
+                states_to_remove.append(i)
+
+        return states_to_remove
+
+    def is_valid_positive_influence_state(self, state):
+        for j, quantity in enumerate(state):
+            should_skip = {
+                'positive': False,
+                'negative': False
+            }
+
+            for start_state_label, dependency_type, in self.incoming_dependencies[quantity[0].label].items():
+                if dependency_type == DependencyType.PositiveInfluence:
+                    should_skip['positive'] = True
+                elif dependency_type == DependencyType.NegativeInfluence:
+                    should_skip['negative'] = True
+            
+            if should_skip['positive'] and should_skip['negative']:
+                continue
+            
+            for start_state_label, dependency_type, in self.incoming_dependencies[quantity[0].label].items():
+                if dependency_type != DependencyType.PositiveInfluence:
+                    continue
+
+                for k, quantity2 in enumerate(state):
+                    if j == k or quantity2[0].label != start_state_label:
+                        continue
+
+                    if quantity[1].label == '+':
+                        if quantity2[2] != '+':
+                            return False
+                    elif quantity[1].label == '-':
+                        if quantity2[2] != '-':
+                            return False
+
+        return True
+
+    # I- check
+
+    def find_invalid_negative_influence_states(self, states) -> List[int]:
+        states_to_remove = []
+
+        for i, state in enumerate(states):
+            if not self.is_valid_negative_influence_state(state):
+                states_to_remove.append(i)
+
+        return states_to_remove
+
+    def is_valid_negative_influence_state(self, state):
+        for j, quantity in enumerate(state):
+            should_skip = {
+                'positive': False,
+                'negative': False
+            }
+
+            for start_state_label, dependency_type, in self.incoming_dependencies[quantity[0].label].items():
+                if dependency_type == DependencyType.PositiveInfluence:
+                    should_skip['positive'] = True
+                elif dependency_type == DependencyType.NegativeInfluence:
+                    should_skip['negative'] = True
+            
+            if should_skip['positive'] and should_skip['negative']:
+                continue
+            
+            for start_state_label, dependency_type, in self.incoming_dependencies[quantity[0].label].items():
+                if dependency_type != DependencyType.NegativeInfluence:
+                    continue
+
+                for k, quantity2 in enumerate(state):
+                    if j == k or quantity2[0].label != start_state_label:
+                        continue
+
+                    if quantity[1].label == '+':
+                        if quantity2[2] != '-':
+                            return False
+                    elif quantity[1].label == '-':
+                        if quantity2[2] != '+':
+                            return False
+
+        return True
+
+    # P+ check
+
+    def find_invalid_positive_proportionality_states(self, states) -> List[int]:
+        states_to_remove = []
+
+        for i, state in enumerate(states):
+            if not self.is_valid_positive_proportionality_state(state):
+                states_to_remove.append(i)
+
+        return states_to_remove
+
+    def is_valid_positive_proportionality_state(self, state):
+        for j, quantity in enumerate(state):
+            should_skip = {
+                'positive': False,
+                'negative': False
+            }
+
+            for start_state_label, dependency_type, in self.incoming_dependencies[quantity[0].label].items():
+                if dependency_type == DependencyType.PositiveProportionality:
+                    should_skip['positive'] = True
+                elif dependency_type == DependencyType.NegativeProportionality:
+                    should_skip['negative'] = True
+            
+            if should_skip['positive'] and should_skip['negative']:
+                continue
+
+            for start_state_label, dependency_type, in self.incoming_dependencies[quantity[0].label].items():
+                if dependency_type != DependencyType.PositiveProportionality:
+                    continue
+
+                for k, quantity2 in enumerate(state):
+                    if j == k or quantity2[0].label != start_state_label:
+                        continue
+
+                    # print(f'comparing {quantity[0].label} with {quantity2[0].label} [{quantity[2]} == {quantity2[2]}')
+                    if quantity[2] != quantity2[2]:
+                        return False
+
+        return True
+
+    # P- check
+
+    def find_invalid_negative_proportionality_states(self, states) -> List[int]:
+        states_to_remove = []
+
+        for i, state in enumerate(states):
+            if not self.is_valid_negative_proportionality_state(state):
+                states_to_remove.append(i)
+
+        return states_to_remove
+
+    def is_valid_negative_proportionality_state(self, state):
+        for j, quantity in enumerate(state):
+            should_skip = {
+                'positive': False,
+                'negative': False
+            }
+
+            for start_state_label, dependency_type, in self.incoming_dependencies[quantity[0].label].items():
+                if dependency_type == DependencyType.PositiveProportionality:
+                    should_skip['positive'] = True
+                elif dependency_type == DependencyType.NegativeProportionality:
+                    should_skip['negative'] = True
+            
+            if should_skip['positive'] and should_skip['negative']:
+                continue
+
+            for start_state_label, dependency_type, in self.incoming_dependencies[quantity[0].label].items():
+                if dependency_type != DependencyType.NegativeProportionality:
+                    continue
+
+                for k, quantity2 in enumerate(state):
+                    if j == k or quantity2[0].label != start_state_label:
+                        continue
+
+                    if quantity[2] == '+':
+                        if quantity2[2] != '-':
+                            return False
+                    elif quantity[2] == '-':
+                        if quantity2[2] != '+':
+                            return False
+                    elif quantity[2] == '0':
+                        if quantity2[2] != '0':
+                            return False
+
+        return True
+
+    def transition_exists(self, start_state, end_state):
+        return True
+
+    def print_combinations(self, all_combinations):
+        print('---------------------------------------------')
+        print(f'total combinations: {len(all_combinations)}')
+        print('---------------------------------------------')
+
+        for combination in all_combinations:
+            print('(', end='')
+
+            for quantity in combination:
+                print(
+                    f'({quantity[0].label}, {quantity[1].label}, {quantity[2]}), ', end='')
+
+            print(')')
+

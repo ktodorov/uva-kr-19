@@ -10,25 +10,25 @@ import utils
 # define spaces
 
 # inflow spaces
-inflow_space1 = QuantitySpace('0')
-inflow_space2 = QuantitySpace('+')
+inflow_zero = QuantitySpace('0')
+inflow_plus = QuantitySpace('+')
 
 # outflow spaces
-outflow_space1 = QuantitySpace('0')
-outflow_space2 = QuantitySpace('+')
-outflow_space3 = QuantitySpace('max')
+outflow_zero = QuantitySpace('0')
+outflow_plus = QuantitySpace('+')
+outflow_max = QuantitySpace('max')
 
 # volume spaces
-volume_space1 = QuantitySpace('0')
-volume_space2 = QuantitySpace('+')
-volume_space3 = QuantitySpace('max')
+volume_zero = QuantitySpace('0')
+volume_plus = QuantitySpace('+')
+volume_max = QuantitySpace('max')
 
 # define quantities
 
 sink = Quantity('sink', [])
-inflow = Quantity('inflow', [inflow_space1, inflow_space2])
-outflow = Quantity('outflow', [outflow_space1, outflow_space2, outflow_space3])
-volume = Quantity('volume', [volume_space1, volume_space2, volume_space3])
+inflow = Quantity('inflow', [inflow_zero, inflow_plus])
+outflow = Quantity('outflow', [outflow_zero, outflow_plus, outflow_max])
+volume = Quantity('volume', [volume_zero, volume_plus, volume_max])
 
 quantities = [sink, inflow, outflow, volume]
 
@@ -42,19 +42,16 @@ volume_outflow_dependency = QuantityDependency(
     DependencyType.PositiveProportionality, volume, outflow)
 
 inflow_sink_dependency = QuantityDependency(
-    DependencyType.Default, inflow, sink)
+    DependencyType.Constraint, volume, outflow, volume_max, outflow_max)
 outflow_sink_dependency = QuantityDependency(
-    DependencyType.Default, outflow, sink)
-volume_sink_dependency = QuantityDependency(
-    DependencyType.Default, volume, sink)
+    DependencyType.Constraint, volume, outflow, volume_zero, outflow_zero)
 
 dependencies = [
     inflow_volume_dependency,
     outflow_volume_dependency,
     volume_outflow_dependency,
     inflow_sink_dependency,
-    outflow_sink_dependency,
-    volume_sink_dependency
+    outflow_sink_dependency
 ]
 
 qualitative_model = QualitativeModel(quantities, dependencies)

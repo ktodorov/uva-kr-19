@@ -9,3 +9,6 @@ class Quantity():
         self.label = label
         self.spaces = spaces
         self.gradients = ['+', '0', '-']
+
+    def __str__(self):
+        return self.label
