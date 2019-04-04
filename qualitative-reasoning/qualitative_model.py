@@ -43,39 +43,45 @@ class QualitativeModel:
         filtered_combinations = self.filter_states(all_combinations)
         return filtered_combinations
 
-    def filter_states(self, all_combinations):
+    def filter_states(self, all_states):
 
         states_to_remove = self.find_invalid_constraint_states(
-            all_combinations)
+            all_states)
 
         for index in reversed(states_to_remove):
-            all_combinations.pop(index)
+            all_states.pop(index)
 
         states_to_remove = self.find_invalid_positive_influence_states(
-            all_combinations)
+            all_states)
 
         for index in reversed(states_to_remove):
-            all_combinations.pop(index)
+            all_states.pop(index)
 
         states_to_remove = self.find_invalid_negative_influence_states(
-            all_combinations)
+            all_states)
 
         for index in reversed(states_to_remove):
-            all_combinations.pop(index)
+            all_states.pop(index)
 
         states_to_remove = self.find_invalid_positive_proportionality_states(
-            all_combinations)
+            all_states)
 
         for index in reversed(states_to_remove):
-            all_combinations.pop(index)
+            all_states.pop(index)
 
         states_to_remove = self.find_invalid_negative_proportionality_states(
-            all_combinations)
+            all_states)
 
         for index in reversed(states_to_remove):
-            all_combinations.pop(index)
+            all_states.pop(index)
+            
+        states_to_remove = self.find_invalid_value_to_derivative_states(
+            all_states)
 
-        return all_combinations
+        for index in reversed(states_to_remove):
+            all_states.pop(index)
+
+        return all_states
 
     def visualize_states(self):
         all_combinations = self.generate_all_combinations()
@@ -97,8 +103,8 @@ class QualitativeModel:
                     end_string = utils.get_state_string(end_state)
                     edges.append((start_string, end_string))
 
-        print(len(edges))
-        # utils.create_representation_graph(nodes, edges)
+        # print(len(edges))
+        utils.create_representation_graph(nodes, edges)
 
     # Constraint check
 
@@ -303,6 +309,31 @@ class QualitativeModel:
                     elif quantity[2] == '0':
                         if quantity2[2] != '0':
                             return False
+
+        return True
+
+    def find_invalid_value_to_derivative_states(self, states) -> List[int]:
+        states_to_remove = []
+
+        for i, state in enumerate(states):
+            if not self.is_valid_value_to_derivative_state(state):
+                states_to_remove.append(i)
+
+        return states_to_remove
+
+    def is_valid_value_to_derivative_state(self, state):
+        for quantity in state:
+            value_index = quantity[0].spaces.index(quantity[1])
+            # print(value_index)
+            # if the index is the first one this means it's the lowest possible value.
+            # Then we shouldn't have '-' derivative
+            # if the index is the last one this means it's the lowest possible value.
+            # Then we shouldn't have '+' derivative
+
+            if value_index == 0 and quantity[2] == '-':
+                return False
+            elif value_index == len(quantity[0].spaces) - 1 and quantity[2] == '+':
+                return False
 
         return True
 
