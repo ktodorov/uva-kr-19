@@ -7,8 +7,8 @@ from quantity_dependency import QuantityDependency
 
 def get_state_string(state):
     result = ''
-    for quantity in state:
-        result = result + f'({quantity[0].label}, {quantity[1].label}, {quantity[2]}), '
+    for quantity in state.get_quantities():
+        result = result + f'({quantity.quantity.label}, {quantity.value.label}, {quantity.gradient}), '
 
     return result
 
