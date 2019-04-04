@@ -4,8 +4,9 @@ from typing import List
 
 from quantity import Quantity
 from quantity_dependency import QuantityDependency
+from qualitative_state import QualitativeState
 
-def get_state_string(state):
+def get_state_string(state: QualitativeState):
     result = ''
     for quantity in state.get_quantities():
         result = result + f'({quantity.quantity.label}, {quantity.value.label}, {quantity.gradient}), '

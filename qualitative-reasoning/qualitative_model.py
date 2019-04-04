@@ -83,9 +83,9 @@ class QualitativeModel:
                 if i == j:
                     continue
 
-                # if self.transition_exists(start_state, end_state):
-                #     end_string = utils.get_state_string(end_state)
-                #     edges.append((start_string, end_string))
+                if self.transition_exists(start_state, end_state):
+                    end_string = utils.get_state_string(end_state)
+                    edges.append((start_string, end_string))
 
         # print(len(edges))
         # utils.create_representation_graph(
@@ -257,7 +257,6 @@ class QualitativeModel:
     def is_valid_value_to_derivative_state(self, state: QualitativeState) -> bool:
         for quantity_state in state.get_quantities():
             value_index = quantity_state.quantity.spaces.index(quantity_state.value)
-            # print(value_index)
             # if the index is the first one this means it's the lowest possible value.
             # Then we shouldn't have '-' derivative
             # if the index is the last one this means it's the lowest possible value.
@@ -270,52 +269,56 @@ class QualitativeModel:
 
         return True
 
-    # def transition_exists(self, start_state, end_state):
-    #     # If we have quantity which is not constrained -
-    #     # it cannot change with more than two steps in one transition
-    #     for i, start_quantity in enumerate(start_state):
-    #         if not self.constraint_dependencies[start_quantity[0].label]:
-    #             # if ((start_quantity[1].label == '0' and end_state[i][1].label == 'max') or
-    #             #         start_quantity[1].label == 'max' and end_state[i][1].label == '0'):
+    def transition_exists(self, start_state: QualitativeState, end_state: QualitativeState):
+        end_state_quantities = end_state.get_quantities()
+        # If we have quantity which is not constrained -
+        # it cannot change with more than two steps in one transition
+        for i, start_quantity_state in enumerate(start_state.get_quantities()):
+            if not self.constraint_dependencies[start_quantity_state.quantity.label]:
+                # if ((start_quantity_state.value.label == '0' and end_state_quantities[i].value.label == 'max') or
+                #         start_quantity_state.value.label == 'max' and end_state_quantities[i].value.label == '0'):
 
-    #             #     return False
-    #             if self.amount_of_changes(start_state, end_state, i) > 1:
-    #                 return False
-    #         else:
-    #             if self.amount_of_changes(start_state, end_state) > 1:
-    #                 # if we have constraint, we check if the old value is not the constrained and the new independent is the one constraining
-    #                 for independent_quantity_label, dependency_tuples in self.constraint_dependencies[start_quantity[0].label].items():
-    #                     old_value = self.get_state_quantity_value(
-    #                         start_state, independent_quantity_label)
-    #                     new_value = self.get_state_quantity_value(
-    #                         end_state, independent_quantity_label)
+                #     return False
+                if self.amount_of_changes(start_state, end_state, i) > 1:
+                    return False
+            # else:
+                # if self.amount_of_changes(start_state, end_state) > 1:
+                    # if we have constraint, we check if the old value is not the constrained and the new independent is the one constraining
+                    # for independent_quantity_label, dependency_tuples in self.constraint_dependencies[start_quantity_state.quantity.label].items():
+                        # old_value = self.get_state_quantity_value(
+                        #     start_state, independent_quantity_label)
+                        # new_value = self.get_state_quantity_value(
+                        #     end_state, independent_quantity_label)
 
-    #                     start_dependecy_labels = [
-    #                         dependency_tuple[0].label for dependency_tuple in dependency_tuples]
+                        # start_dependecy_labels = [
+                        #     dependency_tuple.quantity.label for dependency_tuple in dependency_tuples]
 
-    #                     if old_value == new_value or new_value not in start_dependecy_labels:
-    #                         return False
+                        # if old_value == new_value or new_value not in start_dependecy_labels:
+                        #     return False
 
-        # if (start_quantity[1].label != end_state[i][1].label and start_quantity[2] == '0'):
-        #     if not self.incoming_dependencies[start_quantity[0].label]:
-        #         return False
-        #     else:
-        #         pass  # ????
+        if (start_quantity_state.value.label != end_state_quantities[i].value.label and start_quantity_state.gradient == '0'):
+            if not self.incoming_dependencies[start_quantity_state.quantity.label]:
+                return False
+            else:
+                pass  # ????
 
         return True
 
-    def amount_of_changes(self, state1, state2, index: int = None) -> int:
+    def amount_of_changes(self, state1: QualitativeState, state2: QualitativeState, index: int = None) -> int:
         result = 0
-        for i in range(len(state1)):
+        state1_quantities = state1.get_quantities()
+        state2_quantities = state2.get_quantities()
+
+        for i in range(len(state1_quantities)):
             if index and index != i:
                 continue
 
-            state1_value_index = state1[i][0].spaces.index(state1[i][1])
-            state2_value_index = state2[i][0].spaces.index(state2[i][1])
+            state1_value_index = state1_quantities[i].quantity.spaces.index(state1_quantities[i].value)
+            state2_value_index = state2_quantities[i].quantity.spaces.index(state2_quantities[i].value)
             result += abs(state1_value_index - state2_value_index)
 
-            state1_gradient_index = state1[i][0].gradients.index(state1[i][2])
-            state2_gradient_index = state2[i][0].gradients.index(state2[i][2])
+            state1_gradient_index = state1_quantities[i].quantity.gradients.index(state1_quantities[i].gradient)
+            state2_gradient_index = state2_quantities[i].quantity.gradients.index(state2_quantities[i].gradient)
             result += abs(state1_gradient_index - state2_gradient_index)
 
         return result
