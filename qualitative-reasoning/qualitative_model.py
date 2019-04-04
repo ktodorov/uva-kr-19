@@ -44,49 +44,22 @@ class QualitativeModel:
         return filtered_combinations
 
     def filter_states(self, all_states):
+        filtered_states = [
+            state 
+            for state in all_states 
+            if self.is_valid_constraint_state(state) and
+               self.is_valid_value_to_derivative_state(state) and
+               self.is_valid_positive_influence_state(state) and
+               self.is_valid_negative_influence_state(state) and
+               self.is_valid_positive_proportionality_state(state) and
+               self.is_valid_negative_proportionality_state(state)]
 
-        states_to_remove = self.find_invalid_constraint_states(
-            all_states)
-
-        for index in reversed(states_to_remove):
-            all_states.pop(index)
-
-        states_to_remove = self.find_invalid_positive_influence_states(
-            all_states)
-
-        for index in reversed(states_to_remove):
-            all_states.pop(index)
-
-        states_to_remove = self.find_invalid_negative_influence_states(
-            all_states)
-
-        for index in reversed(states_to_remove):
-            all_states.pop(index)
-
-        states_to_remove = self.find_invalid_positive_proportionality_states(
-            all_states)
-
-        for index in reversed(states_to_remove):
-            all_states.pop(index)
-
-        states_to_remove = self.find_invalid_negative_proportionality_states(
-            all_states)
-
-        for index in reversed(states_to_remove):
-            all_states.pop(index)
-            
-        states_to_remove = self.find_invalid_value_to_derivative_states(
-            all_states)
-
-        for index in reversed(states_to_remove):
-            all_states.pop(index)
-
-        return all_states
+        return filtered_states
 
     def visualize_states(self):
         all_combinations = self.generate_all_combinations()
 
-        # self.print_combinations(all_combinations)
+        self.print_combinations(all_combinations)
 
         nodes = []
         edges = []
@@ -104,19 +77,9 @@ class QualitativeModel:
                     edges.append((start_string, end_string))
 
         # print(len(edges))
-        utils.create_representation_graph(nodes, edges)
+        # utils.create_representation_graph(nodes, edges)
 
     # Constraint check
-
-    def find_invalid_constraint_states(self, states) -> List[int]:
-        states_to_remove = []
-
-        # remove the constraints
-        for i, state in enumerate(states):
-            if not self.is_valid_constraint_state(state):
-                states_to_remove.append(i)
-
-        return states_to_remove
 
     def is_valid_constraint_state(self, state) -> bool:
         for j, quantity in enumerate(state):
@@ -137,15 +100,6 @@ class QualitativeModel:
         return True
 
     # I+ check
-
-    def find_invalid_positive_influence_states(self, states) -> List[int]:
-        states_to_remove = []
-
-        for i, state in enumerate(states):
-            if not self.is_valid_positive_influence_state(state):
-                states_to_remove.append(i)
-
-        return states_to_remove
 
     def is_valid_positive_influence_state(self, state):
         for j, quantity in enumerate(state):
@@ -182,15 +136,6 @@ class QualitativeModel:
 
     # I- check
 
-    def find_invalid_negative_influence_states(self, states) -> List[int]:
-        states_to_remove = []
-
-        for i, state in enumerate(states):
-            if not self.is_valid_negative_influence_state(state):
-                states_to_remove.append(i)
-
-        return states_to_remove
-
     def is_valid_negative_influence_state(self, state):
         for j, quantity in enumerate(state):
             should_skip = {
@@ -226,15 +171,6 @@ class QualitativeModel:
 
     # P+ check
 
-    def find_invalid_positive_proportionality_states(self, states) -> List[int]:
-        states_to_remove = []
-
-        for i, state in enumerate(states):
-            if not self.is_valid_positive_proportionality_state(state):
-                states_to_remove.append(i)
-
-        return states_to_remove
-
     def is_valid_positive_proportionality_state(self, state):
         for j, quantity in enumerate(state):
             should_skip = {
@@ -266,15 +202,6 @@ class QualitativeModel:
         return True
 
     # P- check
-
-    def find_invalid_negative_proportionality_states(self, states) -> List[int]:
-        states_to_remove = []
-
-        for i, state in enumerate(states):
-            if not self.is_valid_negative_proportionality_state(state):
-                states_to_remove.append(i)
-
-        return states_to_remove
 
     def is_valid_negative_proportionality_state(self, state):
         for j, quantity in enumerate(state):
@@ -311,15 +238,6 @@ class QualitativeModel:
                             return False
 
         return True
-
-    def find_invalid_value_to_derivative_states(self, states) -> List[int]:
-        states_to_remove = []
-
-        for i, state in enumerate(states):
-            if not self.is_valid_value_to_derivative_state(state):
-                states_to_remove.append(i)
-
-        return states_to_remove
 
     def is_valid_value_to_derivative_state(self, state):
         for quantity in state:
