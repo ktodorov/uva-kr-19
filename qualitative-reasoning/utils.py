@@ -14,35 +14,20 @@ def get_state_string(state: QualitativeState):
     return result
 
 def create_representation_graph(
-        states: List[str],
+        states: List[QualitativeState],
         edges: List[tuple],
-        font_size: int = 10,
-        font_color: str = 'black',
-        node_size: int = 500,
-        file_path: str = None):
+        file_path: str):
 
-    G = Digraph(comment='The Qualitative Model')
+    graph = Digraph(comment='The Qualitative Model')
+    graph.node_attr.update(color='skyblue', style='filled')
 
     for state in states:
-        G.node(state)
+        graph.node(state.get_string_representation())
 
     for edge in edges:
-        G.edge(edge[0], edge[1])
+        graph.edge(edge[0].get_string_representation(), edge[1].get_string_representation())
 
-    # nx.draw(
-    #     G,
-    #     font_size=font_size,
-    #     font_color=font_color,
-    #     # node_color=node_color_map,
-    #     with_labels=True,
-    #     node_size=node_size)
-
-    G.render('test-output/round-table.gv', view=True)
-    # if file_path:
-    #     plt.savefig(file_path)
-    # else:
-    #     plt.show()
-
+    graph.render(file_path, view=True)
 
 def get_quantity_states(quantity: Quantity) -> List[str]:
     quantity_states = []
@@ -51,3 +36,10 @@ def get_quantity_states(quantity: Quantity) -> List[str]:
             quantity_states.append((quantity, quantity_space, quantity_gradient))
 
     return quantity_states
+
+def tuples_contain_element(tuples: List[tuple], element: any, tuple_index: int) -> bool:
+    for tuple_element in tuples:
+        if tuple_element[tuple_index] == element:
+            return True
+
+    return False
