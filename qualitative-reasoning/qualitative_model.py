@@ -337,7 +337,13 @@ class QualitativeModel:
                     new_gradient = '0'
 
                 new_value = quantity_state.quantity.spaces[quantity_state_value_index + 1]
-                new_possible_state = QuantityState(quantity_state.quantity, new_value, new_gradient)
+                new_possible_state = QuantityState(
+                    quantity_state.quantity, new_value, new_gradient)
+                possible_states_by_quantity[i].append(new_possible_state)
+            # if our gradient is 0 and we can move further down the values
+            elif quantity_state.gradient == '0' and quantity_state_value_index != 0:
+                new_possible_state = QuantityState(
+                    quantity_state.quantity, quantity_state.value, '-')
                 possible_states_by_quantity[i].append(new_possible_state)
             # if our gradient is - and we can move further down the values
             elif quantity_state.gradient == '-' and quantity_state_value_index != 0:
