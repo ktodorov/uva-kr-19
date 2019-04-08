@@ -53,7 +53,7 @@ volume_outflow_dependency = QuantityDependency(
     start_quantity=volume,
     end_quantity=outflow)
 
-# Constraints
+# Given constraints
 
 inflow_sink_dependency = QuantityDependency(
     dependency_type=DependencyType.Constraint,
@@ -69,12 +69,18 @@ outflow_sink_dependency = QuantityDependency(
     start_quantity_values=[volume_zero],
     end_quantity_values=[outflow_zero])
 
+# Assumed constraints
+
+# if inflow value is 0, volume can not be increasing
+
 inflow_volume_value_dependency = QuantityDependency(
     dependency_type=DependencyType.Constraint,
     start_quantity=inflow,
     end_quantity=volume,
     start_quantity_values=[inflow_zero],
     end_quantity_gradients=['-', '0'])
+
+# if inflow value is 0, outflow can not be increasing
 
 inflow_outflow_value_dependency = QuantityDependency(
     dependency_type=DependencyType.Constraint,
@@ -83,13 +89,14 @@ inflow_outflow_value_dependency = QuantityDependency(
     start_quantity_values=[inflow_zero],
     end_quantity_gradients=['-', '0'])
 
+# group all dependencies together
+
 dependencies = [
     inflow_volume_dependency,
     outflow_volume_dependency,
     volume_outflow_dependency,
     inflow_sink_dependency,
     outflow_sink_dependency,
-    # inflow_volume_value_dependency,
     inflow_volume_value_dependency,
     inflow_outflow_value_dependency
 ]
