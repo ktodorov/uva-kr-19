@@ -24,6 +24,22 @@ class QualitativeState:
             if quantity_state.quantity.label == quantity_label:
                 return quantity_state
 
+    def get_string_representation(self):
+        result = ''
+
+        for quantity in self.get_quantities():
+            result = result + \
+                f'{quantity.quantity.label}[{quantity.value.label},{quantity.gradient}]\n'
+
+        return result
+
+    def contains_gradient(self, gradient: str) -> bool:
+        for quantity_state in self.qualitative_state_quantities:
+            if quantity_state.gradient == gradient:
+                return True
+
+        return False
+
     def __eq__(self, other):
         """Overrides the default implementation"""
         if not isinstance(other, QualitativeState):
