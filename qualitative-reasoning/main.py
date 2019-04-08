@@ -7,59 +7,94 @@ from qualitative_model import QualitativeModel
 import utils
 
 
-# define spaces
+# Define possible values
 
-# inflow spaces
+# Inflow possible values
 inflow_zero = QuantitySpace('0')
 inflow_plus = QuantitySpace('+')
 
-# outflow spaces
+# Outflow possible values
 outflow_zero = QuantitySpace('0')
 outflow_plus = QuantitySpace('+')
 outflow_max = QuantitySpace('max')
 
-# volume spaces
+# Volume possible values
 volume_zero = QuantitySpace('0')
 volume_plus = QuantitySpace('+')
 volume_max = QuantitySpace('max')
 
 # define quantities
 
-sink = Quantity('sink', [])
-inflow = Quantity('inflow', [inflow_zero, inflow_plus])
-outflow = Quantity('outflow', [outflow_zero, outflow_plus, outflow_max])
-volume = Quantity('volume', [volume_zero, volume_plus, volume_max])
+# sink = Quantity('sink', [])
+inflow = Quantity('Inflow', [inflow_zero, inflow_plus], ['+', '0', '-'])
+outflow = Quantity(
+    'Outflow', [outflow_zero, outflow_plus, outflow_max], ['+', '0', '-'])
+volume = Quantity(
+    'Volume', [volume_zero, volume_plus, volume_max], ['+', '0', '-'])
 
-quantities = [sink, inflow, outflow, volume]
+quantities = [inflow, outflow, volume]
 
-# define dependencies
+# Define dependencies
+
+# Influences
 
 inflow_volume_dependency = QuantityDependency(
-    DependencyType.PositiveInfluence, inflow, volume)
+    dependency_type=DependencyType.PositiveInfluence,
+    start_quantity=inflow,
+    end_quantity=volume)
+
 outflow_volume_dependency = QuantityDependency(
-    DependencyType.NegativeInfluence, outflow, volume)
+    dependency_type=DependencyType.NegativeInfluence,
+    start_quantity=outflow,
+    end_quantity=volume)
+
 volume_outflow_dependency = QuantityDependency(
-    DependencyType.PositiveProportionality, volume, outflow)
+    dependency_type=DependencyType.PositiveProportionality,
+    start_quantity=volume,
+    end_quantity=outflow)
+
+# Constraints
 
 inflow_sink_dependency = QuantityDependency(
-    DependencyType.Constraint, volume, outflow, volume_max, outflow_max)
+    dependency_type=DependencyType.Constraint,
+    start_quantity=volume,
+    end_quantity=outflow,
+    start_quantity_values=[volume_max],
+    end_quantity_values=[outflow_max])
+
 outflow_sink_dependency = QuantityDependency(
-    DependencyType.Constraint, volume, outflow, volume_zero, outflow_zero)
+    dependency_type=DependencyType.Constraint,
+    start_quantity=volume,
+    end_quantity=outflow,
+    start_quantity_values=[volume_zero],
+    end_quantity_values=[outflow_zero])
+
+inflow_volume_value_dependency = QuantityDependency(
+    dependency_type=DependencyType.Constraint,
+    start_quantity=inflow,
+    end_quantity=volume,
+    start_quantity_values=[inflow_zero],
+    end_quantity_gradients=['-', '0'])
+
+inflow_outflow_value_dependency = QuantityDependency(
+    dependency_type=DependencyType.Constraint,
+    start_quantity=inflow,
+    end_quantity=outflow,
+    start_quantity_values=[inflow_zero],
+    end_quantity_gradients=['-', '0'])
 
 dependencies = [
     inflow_volume_dependency,
     outflow_volume_dependency,
     volume_outflow_dependency,
     inflow_sink_dependency,
-    outflow_sink_dependency
+    outflow_sink_dependency,
+    # inflow_volume_value_dependency,
+    inflow_volume_value_dependency,
+    inflow_outflow_value_dependency
 ]
+
+# Initialize and execute the qualitative model
 
 qualitative_model = QualitativeModel(quantities, dependencies)
 qualitative_model.visualize_states()
-
-# utils.create_representation_graph(
-#     quantities,
-#     dependencies,
-#     font_size=9,
-#     font_color='white',
-#     node_size=1500)
