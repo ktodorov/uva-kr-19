@@ -71,7 +71,16 @@ outflow_sink_dependency = QuantityDependency(
 
 # Assumed constraints
 
+#if the volume value is 0 the outflow value cannot be 0
+
 # if inflow value is 0, volume can not be increasing
+
+volume_outflow_value_dependency = QuantityDependency(
+    dependency_type=DependencyType.Constraint,
+    start_quantity=volume,
+    end_quantity=outflow,
+    start_quantity_values=[volume_plus, volume_max],
+    end_quantity_values=[outflow_plus, outflow_max])
 
 inflow_volume_value_dependency = QuantityDependency(
     dependency_type=DependencyType.Constraint,
@@ -98,7 +107,8 @@ dependencies = [
     inflow_sink_dependency,
     outflow_sink_dependency,
     inflow_volume_value_dependency,
-    inflow_outflow_value_dependency
+    inflow_outflow_value_dependency,
+    volume_outflow_value_dependency
 ]
 
 # Initialize and execute the qualitative model

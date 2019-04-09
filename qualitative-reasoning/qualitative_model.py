@@ -291,6 +291,7 @@ class QualitativeModel:
         return True
 
     def get_possible_changes(self, state: QualitativeState) -> List[QualitativeState]:
+
         possible_states_by_quantity = []
         all_gradients_are_zero = True
 
@@ -316,6 +317,11 @@ class QualitativeModel:
             elif quantity_state.gradient == '0' and quantity_state_value_index != 0:
                 new_possible_state = QuantityState(
                     quantity_state.quantity, quantity_state.value, '-')
+                possible_states_by_quantity[i].append(new_possible_state)
+            # if the value and derivative of inflow is 0, the derivative of inflow can go to +
+            elif quantity_state.gradient == '0' and quantity_state.value.label == '0' and quantity_state.quantity.label == 'Inflow':
+                new_possible_state = QuantityState(
+                    quantity_state.quantity, quantity_state.value, '+')
                 possible_states_by_quantity[i].append(new_possible_state)
             # if our gradient is - and we can move further down the values
             elif quantity_state.gradient == '-' and quantity_state_value_index != 0:
@@ -377,3 +383,9 @@ class QualitativeModel:
 
         for qualitative_state in all_states:
             print(str(qualitative_state))
+
+    # def create_exogenous_inflow_transition(self, all_states: List[QualitativeState]):
+    #     zero_state = [state for state in all_states if
+    #                   all(quantity_state.value.label == '0' and quantity_state.gradient == '0' for quantity_state for state.get_quantities())
+    #                   ][0]
+
