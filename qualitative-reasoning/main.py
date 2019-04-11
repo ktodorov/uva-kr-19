@@ -73,14 +73,14 @@ outflow_sink_dependency = QuantityDependency(
 
 #if the volume value is 0 the outflow value cannot be 0
 
-# if inflow value is 0, volume can not be increasing
-
 volume_outflow_value_dependency = QuantityDependency(
     dependency_type=DependencyType.Constraint,
     start_quantity=volume,
     end_quantity=outflow,
     start_quantity_values=[volume_plus, volume_max],
     end_quantity_values=[outflow_plus, outflow_max])
+
+# if inflow value is 0, volume can not be increasing
 
 inflow_volume_value_dependency = QuantityDependency(
     dependency_type=DependencyType.Constraint,
@@ -111,7 +111,25 @@ dependencies = [
     volume_outflow_value_dependency
 ]
 
+# #Ask user for initial state
+#
+# # s0 = input("Enter a initial state in the form [_,_], outflow[_,_], : ")
+# s0 = {'Inflow' :('0','0'), 'Volume':('0','0'), 'Outflow':('0','0')}
+#
+# all_states = state.get_quantities()
+#
+# for i, quantity_state in enumerate(all_states):
+#
+#         if all([quantity_state.gradient == s0[key][0] and quantity_state.value.label == s0[key][1] and quantity_state.quantity.label == key for key in s0.keys()]):
+#             all_states.insert(0, all_states.pop(all_states.index(quantity_state)))
+#             break
+#         else:
+#             print('invalid state')
+#
+
+
 # Initialize and execute the qualitative model
 
 qualitative_model = QualitativeModel(quantities, dependencies)
 qualitative_model.visualize_states()
+

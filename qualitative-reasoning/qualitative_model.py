@@ -78,6 +78,63 @@ class QualitativeModel:
 
         return filtered_states
 
+
+    # def trace(self, all_edges, start_state, end_state):
+    #     distance = 0
+    #     current_node = start_state
+    #     visited_nodes = [start_state]
+    #     current_edges = all_edges[current_node]
+    #
+    #
+    #     while current_node != end_state:
+    #         for edge in current_edges:
+    #             current_node = edge[1]
+    #             current_edges = all_edges[current_node]
+    #             distance += 1
+    #             visited_nodes.append(current_node)
+    #             # print(current_edges)
+    #             for e in current_edges:
+    #                 for n in visited_nodes:
+    #                     if n == e[1]:
+    #                         current_edges.remove(e)
+    #         if current_node == end_state:
+    #             print('Success!')
+    #
+    #
+    #         elif len(current_edges) == 0:
+    #             print('Not possible')
+    #             print('Visited nodes = ' + str(visited_nodes))
+    #             break
+    #
+    #     return visited_nodes
+
+    def trace(self, all_edges, start_state):
+        distance = 0
+        current_node = start_state
+        visited_nodes = [start_state]
+        edges_used = []
+        current_edges = all_edges[current_node]
+
+
+        while len(current_edges) != 0:
+            previous_node = current_node
+            for edge in current_edges:
+                current_node = edge[1]
+                current_edges = all_edges[current_node]
+                distance += 1
+                visited_nodes.append(current_node)
+                edges_used.append((previous_node, current_node))
+
+                # print(current_edges)
+                for e in current_edges:
+                    for n in visited_nodes:
+                        if n == e[1]:
+                            current_edges.remove(e)
+                if len(current_edges) == 0:
+                    break
+
+        return edges_used
+
     def visualize_states(self):
         all_combinations = self.generate_all_combinations()
         nodes = []
@@ -85,19 +142,64 @@ class QualitativeModel:
         # print(len(all_combinations))
         # self.print_combinations(all_combinations)
 
+
+        #Ask user for initial state
+
+        # s0 = input("Enter a initial state in the form [_,_], outflow[_,_], : ")
+        s0 = {'Inflow' :('0','0'), 'Volume':('0','0'), 'Outflow':('0','0')}
+
+        for i, state in enumerate(all_combinations):
+            counter = 0
+            for quant in state.get_quantities():
+                for key in s0.keys():
+                    if (quant.gradient == s0[key][0] and quant.value.label == s0[key][1] and quant.quantity.label == key):
+                        counter += 1
+            if counter == 3:
+                all_combinations.insert(0, all_combinations.pop(all_combinations.index(state)))
+                # if all([(quant.gradient == s0[key][0] and quant.value.label == s0[key][1] and quant.quantity.label == key) for key in s0.keys()]):
+                #     all_states.insert(0, all_states.pop(all_states.index(state)))
+                #     print('worked')
+                #     break
+
+        all_states = []
+        edges_per_node = {}
+
+
+
+
         for i, start_state in enumerate(all_combinations):
-            nodes.append(start_state)
+            all_states.append("State {}\n".format(i+1) + start_state.get_string_representation())
+
+        for i, start_state in enumerate(all_combinations):
+            # nodes.append(start_state)
+            nodes.append(all_states[i])
 
             for j, end_state in enumerate(all_combinations):
                 if i == j:
                     continue
 
                 if self.transition_exists(start_state, end_state):
-                    edges.append((start_state, end_state))
+                    # edges.append((start_state, end_state))
+                    edge = (all_states[i], all_states[j])
+                    edges.append(edge)
+
+                    if all_states[i] in edges_per_node.keys():
+                        edges_per_node[all_states[i]].append(edge)
+                    else:
+                        edges_per_node[all_states[i]] = [edge]
+
+
+
+        # visited_nodes = self.trace(edges_per_node, all_states[14], all_states[24]) # testing states
+        visited_nodes = self.trace(edges_per_node, all_states[14]) # testing states
+
+        # print(edges_per_node[all_states[3]])
+        # print(visited_nodes)
 
         utils.create_representation_graph(
             nodes,
             edges,
+            visited_nodes,
             file_path='results/qualitative_graph.gv')
 
     # Constraint check
@@ -296,6 +398,8 @@ class QualitativeModel:
         all_gradients_are_zero = True
 
         for i, quantity_state in enumerate(state.get_quantities()):
+
+
             possible_states_by_quantity.append([])
             possible_states_by_quantity[i].append(quantity_state)
             quantity_state_value_index = quantity_state.quantity.spaces.index(
@@ -334,6 +438,7 @@ class QualitativeModel:
                 new_value = quantity_state.quantity.spaces[quantity_state_value_index - 1]
                 new_possible_state = QuantityState(
                     quantity_state.quantity, new_value, new_gradient)
+
                 possible_states_by_quantity[i].append(new_possible_state)
 
         all_possible_combinations = list(
@@ -342,6 +447,8 @@ class QualitativeModel:
         # we remove the combination where the state stays the same
         if not all_gradients_are_zero:
             all_possible_combinations.pop(0)
+
+
 
         possible_states = []
         for possible_combination in all_possible_combinations:
