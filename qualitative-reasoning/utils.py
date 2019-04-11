@@ -67,23 +67,22 @@ def create_representation_graph(
     graph.node_attr.update(color='skyblue', style='filled')
 
     for i, state in enumerate(states):
-        # graph.node("State {}\n".format(i+1) + state.get_string_representation()) #changed this!!!!!!!!!!!!
-        # graph.node(state.get_string_representation())
+        # if state in visited_edges: #This is for the trace graph ---> change it for whole graph
         graph.node(state)
 
-    # differences = find_differences(visited_edges[0][0], visited_edges[0][1])
-
-    # print(differences)
 
     for i, edge in enumerate(edges):
-        # graph.edge("State {}\n".format(i+1) + edge[0].get_string_representation(), "State {}\n".format(i+2) + edge[1].get_string_representation())
-        # graph.edge(edge[0].get_string_representation(), edge[1].get_string_representation())
+######################################################## Full graph
+        graph.edge(edge[0], edge[1], color = 'black')
+######################################################## Full graph with trace
         if edge in visited_edges:
             differences = find_differences(edge[0], edge[1])
-            graph.edge(edge[0],edge[1], color='red', label= str(differences)) ###################
+            graph.edge(edge[0],edge[1], color='red', label= str(differences))
         else:
             graph.edge(edge[0], edge[1], color = 'black')
-
+######################################################### TRACE GRAPH BELOW
+        # differences = find_differences(edge[0], edge[1])
+        # graph.edge(edge[0],edge[1], color='red', label= str(differences))
 
     graph.render(file_path, view=True)
 

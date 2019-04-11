@@ -133,7 +133,7 @@ class QualitativeModel:
                 if len(current_edges) == 0:
                     break
 
-        return edges_used
+        return edges_used, visited_nodes
 
     def visualize_states(self):
         all_combinations = self.generate_all_combinations()
@@ -142,25 +142,6 @@ class QualitativeModel:
         # print(len(all_combinations))
         # self.print_combinations(all_combinations)
 
-
-        #Ask user for initial state
-
-        # s0 = input("Enter a initial state in the form [_,_], outflow[_,_], : ")
-        s0 = {'Inflow' :('0','0'), 'Volume':('0','0'), 'Outflow':('0','0')}
-
-        for i, state in enumerate(all_combinations):
-            counter = 0
-            for quant in state.get_quantities():
-                for key in s0.keys():
-                    if (quant.gradient == s0[key][0] and quant.value.label == s0[key][1] and quant.quantity.label == key):
-                        counter += 1
-            if counter == 3:
-                all_combinations.insert(0, all_combinations.pop(all_combinations.index(state)))
-                # if all([(quant.gradient == s0[key][0] and quant.value.label == s0[key][1] and quant.quantity.label == key) for key in s0.keys()]):
-                #     all_states.insert(0, all_states.pop(all_states.index(state)))
-                #     print('worked')
-                #     break
-
         all_states = []
         edges_per_node = {}
 
@@ -168,10 +149,10 @@ class QualitativeModel:
 
 
         for i, start_state in enumerate(all_combinations):
-            all_states.append("State {}\n".format(i+1) + start_state.get_string_representation())
+            all_states.append(start_state.get_string_representation())
+
 
         for i, start_state in enumerate(all_combinations):
-            # nodes.append(start_state)
             nodes.append(all_states[i])
 
             for j, end_state in enumerate(all_combinations):
@@ -188,18 +169,62 @@ class QualitativeModel:
                     else:
                         edges_per_node[all_states[i]] = [edge]
 
-
+       # # s0 = input("Enter a initial state in the form {'Inflow' :('0','0'), 'Volume':('0','0'), 'Outflow':('0','0')} : ")
+       #  s0 = {'Inflow' :('0','0'), 'Volume':('0','0'), 'Outflow':('0','0')}
+       #
+       #  for i, state in enumerate(all_combinations):
+       #      counter = 0
+       #      for quant in state.get_quantities():
+       #          for key in s0.keys():
+       #              if (quant.gradient == s0[key][0] and quant.value.label == s0[key][1] and quant.quantity.label == key):
+       #                  counter += 1
+       #      if counter == 3:
+       #          all_combinations.insert(0, all_combinations.pop(all_combinations.index(state)))
+       #          # if all([(quant.gradient == s0[key][0] and quant.value.label == s0[key][1] and quant.quantity.label == key) for key in s0.keys()]):
+       #          #     all_states.insert(0, all_states.pop(all_states.index(state)))
+       #          #     print('worked')
+       #          #     break
 
         # visited_nodes = self.trace(edges_per_node, all_states[14], all_states[24]) # testing states
-        visited_nodes = self.trace(edges_per_node, all_states[14]) # testing states
+        visited_edges, visited_nodes = self.trace(edges_per_node, all_states[0]) # testing states
 
-        # print(edges_per_node[all_states[3]])
-        # print(visited_nodes)
+
+######################################## REMOVE COMMENTS BELOW FOR TRACE GRAPH
+        # all_combs = []
+        # for i, st in enumerate(visited_nodes):
+        #     for state in all_combinations:
+        #         s = state.get_string_representation()
+        #         if st == s:
+        #             all_combs.append(state)
+        #
+        # print(len(all_combs))
+        #
+        # visited_states = []
+        # nodes = []
+        # edges = []
+        #
+        # for i, start_state in enumerate(visited_nodes):
+        #     visited_states.append("State {}\n".format(i+1) + start_state)
+        #
+        #
+        # for i, start_state in enumerate(all_combs):
+        #     # nodes.append(start_state)
+        #     nodes.append(visited_states[i])
+        #
+        #     for j, end_state in enumerate(all_combs):
+        #         if i == j:
+        #             continue
+        #
+        #         if self.transition_exists(start_state, end_state):
+        #             edge = (visited_states[i], visited_states[j])
+        #             edges.append(edge)
+        # print(len(edges))
+############################################################################
 
         utils.create_representation_graph(
             nodes,
             edges,
-            visited_nodes,
+            visited_edges,
             file_path='results/qualitative_graph.gv')
 
     # Constraint check
