@@ -75,14 +75,14 @@ def create_representation_graph(
 ######################################################## Full graph
         graph.edge(edge[0], edge[1], color = 'black')
 ######################################################## Full graph with trace
-        if edge in visited_edges:
-            differences = find_differences(edge[0], edge[1])
-            graph.edge(edge[0],edge[1], color='red', label= str(differences))
-        else:
-            graph.edge(edge[0], edge[1], color = 'black')
+        # if edge in visited_edges:
+        #     graph.edge(edge[0],edge[1], color='red')
+        # else:
+        #     graph.edge(edge[0], edge[1], color = 'black')
 ######################################################### TRACE GRAPH BELOW
         # differences = find_differences(edge[0], edge[1])
         # graph.edge(edge[0],edge[1], color='red', label= str(differences))
+
 
     graph.render(file_path, view=True)
 

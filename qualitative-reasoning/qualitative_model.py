@@ -79,35 +79,6 @@ class QualitativeModel:
         return filtered_states
 
 
-    # def trace(self, all_edges, start_state, end_state):
-    #     distance = 0
-    #     current_node = start_state
-    #     visited_nodes = [start_state]
-    #     current_edges = all_edges[current_node]
-    #
-    #
-    #     while current_node != end_state:
-    #         for edge in current_edges:
-    #             current_node = edge[1]
-    #             current_edges = all_edges[current_node]
-    #             distance += 1
-    #             visited_nodes.append(current_node)
-    #             # print(current_edges)
-    #             for e in current_edges:
-    #                 for n in visited_nodes:
-    #                     if n == e[1]:
-    #                         current_edges.remove(e)
-    #         if current_node == end_state:
-    #             print('Success!')
-    #
-    #
-    #         elif len(current_edges) == 0:
-    #             print('Not possible')
-    #             print('Visited nodes = ' + str(visited_nodes))
-    #             break
-    #
-    #     return visited_nodes
-
     def trace(self, all_edges, start_state):
         distance = 0
         current_node = start_state
@@ -139,13 +110,9 @@ class QualitativeModel:
         all_combinations = self.generate_all_combinations()
         nodes = []
         edges = []
-        # print(len(all_combinations))
-        # self.print_combinations(all_combinations)
 
         all_states = []
         edges_per_node = {}
-
-
 
 
         for i, start_state in enumerate(all_combinations):
@@ -185,8 +152,8 @@ class QualitativeModel:
        #          #     print('worked')
        #          #     break
 
-        # visited_nodes = self.trace(edges_per_node, all_states[14], all_states[24]) # testing states
-        visited_edges, visited_nodes = self.trace(edges_per_node, all_states[0]) # testing states
+
+        visited_edges, visited_nodes = self.trace(edges_per_node, all_states[2]) # testing states
 
 
 ######################################## REMOVE COMMENTS BELOW FOR TRACE GRAPH
