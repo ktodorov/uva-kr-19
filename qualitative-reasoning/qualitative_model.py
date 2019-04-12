@@ -79,7 +79,7 @@ class QualitativeModel:
         return filtered_states
 
 
-    def trace(self, all_edges, start_state):
+    def trace(self, all_edges, start_state, end_state):
         distance = 0
         current_node = start_state
         visited_nodes = [start_state]
@@ -87,24 +87,55 @@ class QualitativeModel:
         current_edges = all_edges[current_node]
 
 
-        while len(current_edges) != 0:
+        while current_node != end_state:
             previous_node = current_node
             for edge in current_edges:
                 current_node = edge[1]
                 current_edges = all_edges[current_node]
                 distance += 1
-                visited_nodes.append(current_node)
+                if current_node not in visited_nodes:
+                    visited_nodes.append(current_node)
                 edges_used.append((previous_node, current_node))
 
-                # print(current_edges)
+                #remove edges that go to a visited node
                 for e in current_edges:
                     for n in visited_nodes:
                         if n == e[1]:
                             current_edges.remove(e)
                 if len(current_edges) == 0:
-                    break
+                    counter = 0
+                    while len(current_edges) == 0:
+                        if counter != len(visited_nodes):
+                            counter += 1
+                            current_node = visited_nodes[-counter]
+                            current_edges = all_edges[current_node]
+                            for e in current_edges:
+                                for n in visited_nodes:
+                                    if n == e[1]:
+                                        current_edges.remove(e)
+                        else:
+                            print('Dead end')
+                            edges_used = None
+                            visited_nodes = None
+                            break
+                if current_node == end_state:
+                    print('Mission succesfull!')
+                    # print(edges_used)
+                    #remove backtracks
+                    nodes = [(edges_used[-1])]
+                    for edge in reversed(edges_used):
+                        if edge not in nodes:
 
-        return edges_used, visited_nodes
+                            if edge[1] == nodes[-1][0]:
+                                nodes.append(edge)
+                            else:
+                                edges_used.remove(edge)
+                    nodes_used =[start_state]
+                    for edge in edges_used:
+                        nodes_used.append(edge[1])
+
+
+        return edges_used, nodes_used
 
     def visualize_states(self):
         all_combinations = self.generate_all_combinations()
@@ -113,6 +144,21 @@ class QualitativeModel:
 
         all_states = []
         edges_per_node = {}
+
+       # # s0 = input("Enter a initial state in the form {'Inflow' :('0','0'), 'Volume':('0','0'), 'Outflow':('0','0')} : ")
+        s0 = {'Inflow' :('0','0'), 'Volume':('0','0'), 'Outflow':('0','0')}
+
+        for i, state in enumerate(all_combinations):
+            counter = 0
+            counter2 = 0
+            for quant in state.get_quantities():
+                for key in s0.keys():
+                    if (quant.gradient == s0[key][0] and quant.value.label == s0[key][1] and quant.quantity.label == key):
+                        counter += 1
+
+            if counter == 3:
+                all_combinations.insert(0, all_combinations.pop(all_combinations.index(state)))
+
 
 
         for i, start_state in enumerate(all_combinations):
@@ -136,24 +182,8 @@ class QualitativeModel:
                     else:
                         edges_per_node[all_states[i]] = [edge]
 
-       # # s0 = input("Enter a initial state in the form {'Inflow' :('0','0'), 'Volume':('0','0'), 'Outflow':('0','0')} : ")
-       #  s0 = {'Inflow' :('0','0'), 'Volume':('0','0'), 'Outflow':('0','0')}
-       #
-       #  for i, state in enumerate(all_combinations):
-       #      counter = 0
-       #      for quant in state.get_quantities():
-       #          for key in s0.keys():
-       #              if (quant.gradient == s0[key][0] and quant.value.label == s0[key][1] and quant.quantity.label == key):
-       #                  counter += 1
-       #      if counter == 3:
-       #          all_combinations.insert(0, all_combinations.pop(all_combinations.index(state)))
-       #          # if all([(quant.gradient == s0[key][0] and quant.value.label == s0[key][1] and quant.quantity.label == key) for key in s0.keys()]):
-       #          #     all_states.insert(0, all_states.pop(all_states.index(state)))
-       #          #     print('worked')
-       #          #     break
 
-
-        visited_edges, visited_nodes = self.trace(edges_per_node, all_states[2]) # testing states
+        visited_edges, visited_nodes = self.trace(edges_per_node, all_states[0], all_states[15]) # Choose input here
 
 
 ######################################## REMOVE COMMENTS BELOW FOR TRACE GRAPH
@@ -163,8 +193,6 @@ class QualitativeModel:
         #         s = state.get_string_representation()
         #         if st == s:
         #             all_combs.append(state)
-        #
-        # print(len(all_combs))
         #
         # visited_states = []
         # nodes = []
@@ -177,15 +205,8 @@ class QualitativeModel:
         # for i, start_state in enumerate(all_combs):
         #     # nodes.append(start_state)
         #     nodes.append(visited_states[i])
-        #
-        #     for j, end_state in enumerate(all_combs):
-        #         if i == j:
-        #             continue
-        #
-        #         if self.transition_exists(start_state, end_state):
-        #             edge = (visited_states[i], visited_states[j])
-        #             edges.append(edge)
-        # print(len(edges))
+        #     if i != len(all_combs)-1:
+        #         edges.append((visited_states[i], visited_states[i+1]))
 ############################################################################
 
         utils.create_representation_graph(

@@ -119,6 +119,7 @@ volume_inflow_value_dependency = QuantityDependency(
     start_quantity=volume,
     end_quantity=inflow,
     start_quantity_values=[outflow_zero],
+    start_quantity_gradients=['0'],
     end_quantity_gradients=['+', '0'])
 
 # group all dependencies together

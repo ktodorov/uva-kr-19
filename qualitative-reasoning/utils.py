@@ -19,9 +19,16 @@ def find_differences(state_1, state_2):
     state_1 = re.findall(r'\[([^]]*)\]', state_1)
     state_2 = re.findall(r'\[([^]]*)\]', state_2)
 
-    if len(state_1) and len(state_2) != 3:
-        print(state_1)
-        print(state_2)
+    for i,s in enumerate(state_1):
+        index = s.find('max')
+        if index != -1:
+            state_1[i] = s.replace('max','m',1)
+
+    for i,s in enumerate(state_2):
+        index = s.find('max')
+        if index != -1:
+            state_2[i] = s.replace('max','m',1)
+
 
     #finds index of difference
     diff = [i for i in range(len(state_1)) if state_1[i] != state_2[i]]
@@ -73,12 +80,12 @@ def create_representation_graph(
 
     for i, edge in enumerate(edges):
 ######################################################## Full graph
-        graph.edge(edge[0], edge[1], color = 'black')
+        # graph.edge(edge[0], edge[1], color = 'black')
 ######################################################## Full graph with trace
-        # if edge in visited_edges:
-        #     graph.edge(edge[0],edge[1], color='red')
-        # else:
-        #     graph.edge(edge[0], edge[1], color = 'black')
+        if edge in visited_edges:
+            graph.edge(edge[0],edge[1], color='red')
+        else:
+            graph.edge(edge[0], edge[1], color = 'black')
 ######################################################### TRACE GRAPH BELOW
         # differences = find_differences(edge[0], edge[1])
         # graph.edge(edge[0],edge[1], color='red', label= str(differences))
