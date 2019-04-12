@@ -5,11 +5,8 @@
       <change beforePath="$PROJECT_DIR$/../SAT/.idea/inspectionProfiles/Project_Default.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../SAT/.idea/inspectionProfiles/Project_Default.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../SAT/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../SAT/.idea/vcs.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../SAT/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../SAT/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/qualitative_model.py" beforeDir="false" afterPath="$PROJECT_DIR$/qualitative_model.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/results/qualitative_graph.gv" beforeDir="false" afterPath="$PROJECT_DIR$/results/qualitative_graph.gv" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/results/qualitative_graph.gv.pdf" beforeDir="false" afterPath="$PROJECT_DIR$/results/qualitative_graph.gv.pdf" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
