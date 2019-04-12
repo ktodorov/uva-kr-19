@@ -98,6 +98,15 @@ inflow_outflow_value_dependency = QuantityDependency(
     start_quantity_values=[inflow_zero],
     end_quantity_gradients=['-', '0'])
 
+#if volume is 0, inflow cannot be [+,-]
+
+inflow_outflow_value_dependency = QuantityDependency(
+    dependency_type=DependencyType.Constraint,
+    start_quantity=volume,
+    end_quantity=inflow,
+    start_quantity_values=[outflow_zero],
+    end_quantity_gradients=['+', '0'])
+
 # group all dependencies together
 
 dependencies = [
