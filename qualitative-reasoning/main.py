@@ -71,6 +71,20 @@ outflow_sink_dependency = QuantityDependency(
 
 # Assumed constraints
 
+in_sink_dependency = QuantityDependency(
+    dependency_type=DependencyType.Constraint,
+    start_quantity=outflow,
+    end_quantity=volume,
+    start_quantity_values=[outflow_max],
+    end_quantity_values=[volume_max])
+
+out_sink_dependency = QuantityDependency(
+    dependency_type=DependencyType.Constraint,
+    start_quantity=outflow,
+    end_quantity=volume,
+    start_quantity_values=[outflow_zero],
+    end_quantity_values=[volume_zero])
+
 #if the volume value is 0 the outflow value cannot be 0
 
 volume_outflow_value_dependency = QuantityDependency(
@@ -98,9 +112,9 @@ inflow_outflow_value_dependency = QuantityDependency(
     start_quantity_values=[inflow_zero],
     end_quantity_gradients=['-', '0'])
 
-#if volume is 0, inflow cannot be [+,-]
+# if volume is 0, inflow cannot be [+,-]
 
-inflow_outflow_value_dependency = QuantityDependency(
+volume_inflow_value_dependency = QuantityDependency(
     dependency_type=DependencyType.Constraint,
     start_quantity=volume,
     end_quantity=inflow,
@@ -117,7 +131,11 @@ dependencies = [
     outflow_sink_dependency,
     inflow_volume_value_dependency,
     inflow_outflow_value_dependency,
-    volume_outflow_value_dependency
+    in_sink_dependency,
+    out_sink_dependency,
+    volume_inflow_value_dependency
+
+    # volume_outflow_value_dependency
 ]
 
 
